@@ -4,19 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { shoes } from "@/data/shoes";
 
-const categories = ["sport", "running", "casual", "formal", "boots", "sandals", "heels"] as const;
+const categories = ["sneakers", "running", "formal", "boots", "sandals", "heels", "sport"] as const;
 
 const allSlides = categories.map((cat, idx) => {
   const catShoes = shoes.filter((s) => s.category === cat);
   const shoe = catShoes[0] || shoes[idx % shoes.length];
   const labels: Record<string, { title: string; subtitle: string; desc: string; label: string }> = {
-    sport: { title: "ورزشی", subtitle: "عملکرد", desc: "کفش‌های ورزشی با جدیدترین تکنولوژی روز دنیا", label: "Sport Performance" },
+    sneakers: { title: "کتانی", subtitle: "شیک", desc: "جدیدترین کتانی‌های روز دنیا برای استایل خیابانی", label: "Sneaker Collection" },
     running: { title: "دویدن", subtitle: "سرعت", desc: "کفش‌های دویدن حرفه‌ای برای بهترین عملکرد", label: "Running Gear" },
-    casual: { title: "روزمره", subtitle: "راحتی", desc: "کفش‌های روزمره برای استایل همیشگی شما", label: "Daily Comfort" },
     formal: { title: "کلاسیک", subtitle: "اصالت", desc: "کفش‌های رسمی و کلاسیک برای موقعیت‌های خاص", label: "Classic Elegance" },
     boots: { title: "کمپین", subtitle: "ماجراجویی", desc: "چکمه‌های مقاوم برای هر مسیری", label: "Adventure Ready" },
     sandals: { title: "تابستانی", subtitle: "طراوت", desc: "صندل‌ها و کفش‌های تابستانی برای روزهای گرم", label: "Summer Collection" },
     heels: { title: "شیک", subtitle: "جذابیت", desc: "کفش‌های پاشنه‌بلند برای شب‌های خاص", label: "Evening Glamour" },
+    sport: { title: "ورزشی", subtitle: "عملکرد", desc: "کفش‌های ورزشی با جدیدترین تکنولوژی روز دنیا", label: "Sport Performance" },
   };
   const info = labels[cat] || { title: "مدرن", subtitle: "گام‌های", desc: "جدیدترین مجموعه کفش", label: "Premium Collection" };
   return { ...info, image: shoe.image, link: `/?category=${cat}`, btnText: "مشاهده محصولات", id: idx };
