@@ -1,0 +1,122 @@
+[
+  {
+    "id": "1",
+    "name": "استیک گریل شده",
+    "nameEn": "Grilled Steak",
+    "description": "استیک ۳۰۰ گرمی با سس مخصوص و سیب‌زمینی تنوری",
+    "price": 450000,
+    "category": "غذاهای اصلی",
+    "image": "/images/steak.jpg",
+    "available": true
+  },
+  {
+    "id": "2",
+    "name": "سالاد سزار",
+    "nameEn": "Caesar Salad",
+    "description": "کاهو، مرغ گریل شده، پنیر پارمزان، سس سزار",
+    "price": 180000,
+    "category": "پیش غذا",
+    "image": "/images/caesar.jpg",
+    "available": true
+  },
+  {
+    "id": "3",
+    "name": "پیتزا مارگاریتا",
+    "nameEn": "Margherita Pizza",
+    "description": "سس گوجه، موزارلا، ریحان تازه",
+    "price": 220000,
+    "category": "غذاهای اصلی",
+    "image": "/images/pizza.jpg",
+    "available": true
+  },
+  {
+    "id": "4",
+    "name": "سوشی مخلوط",
+    "nameEn": "Mixed Sushi",
+    "description": "۱۲ عدد سوشی تازه با انواع ماهی",
+    "price": 350000,
+    "category": "غذاهای اصلی",
+    "image": "/images/sushi.jpg",
+    "available": true
+  },
+  {
+    "id": "5",
+    "name": "برگر مخصوص",
+    "nameEn": "Special Burger",
+    "description": "برگر ۲۰۰ گرمی با پنیر چدار، بیکن، سیب‌زمینی",
+    "price": 280000,
+    "category": "فست فود",
+    "image": "/images/burger.jpg",
+    "available": true
+  },
+  {
+    "id": "6",
+    "name": "پاستا آلفردو",
+    "nameEn": "Fettuccine Alfredo",
+    "description": "پاستا با سس خامه‌ای، مرغ و قارچ",
+    "price": 250000,
+    "category": "غذاهای اصلی",
+    "image": "/images/pasta.jpg",
+    "available": true
+  },
+  {
+    "id": "7",
+    "name": "تیرامیسو",
+    "nameEn": "Tiramisu",
+    "description": "دسر کلاسیک ایتالیایی با قهوه و ماسکارپونه",
+    "price": 150000,
+    "category": "دسر",
+    "image": "/images/tiramisu.jpg",
+    "available": true
+  },
+  {
+    "id": "8",
+    "name": "apérol Spritz",
+    "nameEn": "Aperol Spritz",
+    "description": "کوکتل کلاسیک ایتالیایی با آپرول و پروسکو",
+    "price": 190000,
+    "category": "نوشیدنی",
+    "image": "/images/aperol.jpg",
+    "available": true
+  },
+  {
+    "id": "9",
+    "name": "سوپ قارچ",
+    "nameEn": "Mushroom Soup",
+    "description": "سوپ قارچ خامه‌ای با نان سیر",
+    "price": 120000,
+    "category": "پیش غذا",
+    "image": "/images/soup.jpg",
+    "available": true
+  },
+  {
+    "id": "10",
+    "name": "چیزکیک نیویورکی",
+    "nameEn": "New York Cheesecake",
+    "description": "چیزکیک کلاسیک با سس توت فرنگی",
+    "price": 160000,
+    "category": "دسر",
+    "image": "/images/cheesecake.jpg",
+    "available": true
+  },
+  {
+    "id": "11",
+    "name": "نوشابه",
+    "nameEn": "Soft Drink",
+    "description": "انواع نوشابه‌های گازدار",
+    "price": 35000,
+    "category": "نوشیدنی",
+    "image": "/images/soda.jpg",
+    "available": true
+  },
+  {
+    "id": "12",
+    "name": "نان سیر",
+    "nameEn": "Garlic Bread",
+    "description": "نان باگت با کره سیر و پنیر",
+    "price": 80000,
+    "category": "پیش غذا",
+    "image": "/images/garlic-bread.jpg",
+    "available": true
+  }
+]

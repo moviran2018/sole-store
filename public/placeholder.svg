@@ -1,0 +1,6 @@
+<svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="600" height="600" fill="#f5f5f0"/>
+  <path d="M200 300C200 250 250 200 300 200C350 200 400 250 400 300C400 350 350 400 300 400C250 400 200 350 200 300Z" fill="#e8e8e3"/>
+  <path d="M240 300C240 268 268 240 300 240C332 240 360 268 360 300C360 332 332 360 300 360C268 360 240 332 240 300Z" fill="#d4d4cf"/>
+  <text x="300" y="420" text-anchor="middle" fill="#999" font-family="sans-serif" font-size="14">Shoe Image</text>
+</svg>
