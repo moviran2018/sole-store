@@ -1,13 +1,13 @@
 import { shoes } from "@/data/shoes";
 import ProductDetailContent from "@/components/ProductDetailContent";
-import type { Shoe } from "@/types/shoe";
 
 export function generateStaticParams() {
   return shoes.map((shoe) => ({ id: shoe.id }));
 }
 
-export default function ProductDetail({ params }: { params: { id: string } }) {
-  const shoe = shoes.find((s) => s.id === params.id);
+export default async function ProductDetail(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+  const shoe = shoes.find((s) => s.id === id);
 
   if (!shoe) {
     return (
