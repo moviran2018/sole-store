@@ -96,7 +96,7 @@ export default function HeroSlider() {
   const s = slides[current];
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-black">
+    <section className="relative h-screen w-full overflow-hidden bg-black hero-3d">
       {slides.map((slide, i) => (
         <div
           key={slide.id}
@@ -112,7 +112,7 @@ export default function HeroSlider() {
               src={`https://picsum.photos/seed/hero${slide.id}/1600/900`}
               alt=""
               onError={() => setImgErrors((prev) => new Set(prev).add(i))}
-              className="absolute inset-0 w-full h-full object-cover opacity-30"
+              className="hero-bg absolute inset-0 w-full h-full object-cover opacity-30"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />

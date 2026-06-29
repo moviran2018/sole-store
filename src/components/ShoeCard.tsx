@@ -10,36 +10,46 @@ export default function ShoeCard({ shoe }: { shoe: Shoe }) {
   const { addItem } = useCart();
 
   return (
-    <div className="group relative card-3d rounded-none overflow-hidden">
+    <div className="group relative card-3d">
       {shoe.new && (
-        <span className="absolute top-3 right-3 z-10 bg-[var(--accent)] text-white text-[10px] font-bold px-2 py-1 tracking-wider uppercase shadow-lg shadow-[var(--accent-glow)]">
+        <span className="absolute top-3 right-3 z-10 badge-new text-white text-[10px] font-bold px-2.5 py-1 tracking-wider uppercase">
           جدید
         </span>
       )}
       {shoe.sale && shoe.discount && (
-        <span className="absolute top-3 left-3 z-10 bg-red-600 text-white text-[10px] font-bold px-2 py-1 tracking-wider uppercase">
+        <span className="absolute top-3 left-3 z-10 badge-sale text-white text-[10px] font-bold px-2.5 py-1 tracking-wider uppercase">
           -{shoe.discount}%
         </span>
       )}
 
       <Link href={`/products/${shoe.id}`} className="block overflow-hidden">
-        <div className="aspect-square overflow-hidden bg-[var(--muted)] relative">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-[1]" />
+        <div className="aspect-square overflow-hidden bg-[var(--muted)] relative rounded-t-[16px]">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-[1]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 z-[1]" />
           <img
             src={imgError ? `/placeholder.svg` : shoe.image}
             alt={shoe.name}
             onError={() => setImgError(true)}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="card-image w-full h-full object-cover"
           />
+          <div className="absolute bottom-3 right-3 z-[2] flex gap-1.5">
+            {shoe.colors.slice(0, 3).map((c) => (
+              <span
+                key={c.hex}
+                className="w-2.5 h-2.5 rounded-full border border-white/30 shadow-lg"
+                style={{ backgroundColor: c.hex }}
+              />
+            ))}
+          </div>
         </div>
       </Link>
 
-      <div className="p-4">
-        <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">
+      <div className="card-content p-4">
+        <p className="text-[10px] uppercase tracking-widest text-gray-600 mb-1 font-medium">
           {shoe.brand}
         </p>
         <Link href={`/products/${shoe.id}`}>
-          <h3 className="text-sm font-medium text-white mb-1 line-clamp-1 group-hover:text-[var(--accent)] transition-colors">
+          <h3 className="text-sm font-bold text-white mb-0.5 line-clamp-1 group-hover:text-[var(--accent)] transition-colors">
             {shoe.namePersian}
           </h3>
         </Link>
@@ -52,15 +62,15 @@ export default function ShoeCard({ shoe }: { shoe: Shoe }) {
                 <span className="text-sm font-bold text-red-500">
                   {new Intl.NumberFormat("fa-IR").format(shoe.price * (1 - shoe.discount / 100))}
                 </span>
-                <span className="text-[10px] text-gray-500 line-through">
+                <span className="text-[10px] text-gray-600 line-through">
                   {new Intl.NumberFormat("fa-IR").format(shoe.price)}
                 </span>
-                <span className="text-[10px] text-gray-500">تومان</span>
+                <span className="text-[10px] text-gray-600">تومان</span>
               </div>
             ) : (
               <span className="text-sm font-bold text-white">
                 {new Intl.NumberFormat("fa-IR").format(shoe.price)}
-                <span className="text-[10px] text-gray-500 mr-1">تومان</span>
+                <span className="text-[10px] text-gray-600 mr-1">تومان</span>
               </span>
             )}
           </div>
@@ -72,26 +82,12 @@ export default function ShoeCard({ shoe }: { shoe: Shoe }) {
             </svg>
           </div>
         </div>
-
-        <div className="flex gap-1.5 mt-3">
-          {shoe.colors.slice(0, 4).map((c) => (
-            <span
-              key={c.hex}
-              className="w-3.5 h-3.5 rounded-full border border-gray-700"
-              style={{ backgroundColor: c.hex }}
-              title={c.name}
-            />
-          ))}
-          {shoe.colors.length > 4 && (
-            <span className="text-[9px] text-gray-500 self-center">+{shoe.colors.length - 4}</span>
-          )}
-        </div>
       </div>
 
-      <div className="px-4 pb-4">
+      <div className="card-btn px-4 pb-4">
         <button
           onClick={() => addItem(shoe, shoe.sizes[0], shoe.colors[0].name)}
-          className="w-full py-2.5 text-xs font-semibold btn-primary tracking-wider uppercase"
+          className="w-full py-2.5 text-xs font-bold btn-primary tracking-wider uppercase"
         >
           افزودن به سبد خرید
         </button>

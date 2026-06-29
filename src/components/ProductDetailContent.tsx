@@ -30,7 +30,7 @@ export default function ProductDetailContent({ shoe }: { shoe: Shoe }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
-            <div className="aspect-square bg-[var(--muted)] overflow-hidden mb-4 card-3d">
+            <div className="aspect-square bg-[var(--muted)] overflow-hidden mb-4 rounded-2xl border border-[var(--border)] shadow-xl">
               <img src={imgError.has("main") ? shoe.image : shoe.images[activeImage] || shoe.image} alt={shoe.name}
                 onError={() => setImgError((prev) => new Set(prev).add("main"))} className="w-full h-full object-cover" />
             </div>

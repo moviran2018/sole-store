@@ -44,7 +44,7 @@ export default function CartPage() {
           {items.map((item) => {
             const itemKey = item.id + item.selectedSize + item.selectedColor;
             return (
-              <div key={itemKey} className="flex items-center gap-4 p-4 bg-[var(--card-bg)] border border-[var(--border)] card-3d">
+              <div key={itemKey} className="flex items-center gap-4 p-4 bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl">
                 <Link href={`/products/${item.id}`} className="shrink-0">
                   <div className="w-20 h-20 bg-[var(--muted)] overflow-hidden">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
