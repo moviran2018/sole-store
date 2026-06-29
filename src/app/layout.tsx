@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl" className={`${vazirmatn.variable}`}>
-      <body className="min-h-full flex flex-col bg-white text-[#111]">
+      <body className="min-h-full flex flex-col bg-black text-white">
         <CartProvider>
           <Header />
           <main className="flex-1">{children}</main>

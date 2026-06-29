@@ -10,8 +10,7 @@ const slides = [
     subtitle: "گام‌های",
     desc: "مجموعه‌ای از بهترین و شیک‌ترین کفش‌های روز دنیا",
     label: "Premium Footwear Collection",
-    bg: "from-amber-100/40 via-white to-stone-200/30",
-    img: "https://picsum.photos/seed/hero1/1600/900",
+    bg: "from-orange-900/20 via-black to-stone-950",
     link: "/#products",
     btnText: "مشاهده محصولات",
   },
@@ -21,8 +20,7 @@ const slides = [
     subtitle: "عملکرد",
     desc: "کفش‌های ورزشی با جدیدترین تکنولوژی روز دنیا",
     label: "Sport Performance",
-    bg: "from-blue-100/40 via-white to-slate-200/30",
-    img: "https://picsum.photos/seed/hero2/1600/900",
+    bg: "from-orange-800/20 via-black to-stone-950",
     link: "/?category=sport",
     btnText: "مشاهده",
   },
@@ -32,8 +30,7 @@ const slides = [
     subtitle: "طراوت",
     desc: "صندل‌ها و کفش‌های تابستانی برای روزهای گرم",
     label: "Summer Collection",
-    bg: "from-yellow-100/40 via-white to-orange-200/30",
-    img: "https://picsum.photos/seed/hero3/1600/900",
+    bg: "from-orange-700/15 via-black to-stone-950",
     link: "/?category=sandals",
     btnText: "مشاهده",
   },
@@ -43,8 +40,7 @@ const slides = [
     subtitle: "اصالت",
     desc: "کفش‌های رسمی و کلاسیک برای موقعیت‌های خاص",
     label: "Classic Elegance",
-    bg: "from-stone-200/40 via-white to-stone-300/30",
-    img: "https://picsum.photos/seed/hero4/1600/900",
+    bg: "from-orange-900/20 via-black to-stone-950",
     link: "/?category=formal",
     btnText: "مشاهده",
   },
@@ -54,8 +50,7 @@ const slides = [
     subtitle: "ماجراجویی",
     desc: "چکمه‌های مقاوم برای هر مسیری",
     label: "Adventure Ready",
-    bg: "from-green-100/40 via-white to-emerald-200/30",
-    img: "https://picsum.photos/seed/hero5/1600/900",
+    bg: "from-orange-800/15 via-black to-stone-950",
     link: "/?category=boots",
     btnText: "مشاهده",
   },
@@ -65,8 +60,7 @@ const slides = [
     subtitle: "جذابیت",
     desc: "کفش‌های پاشنه‌بلند برای شب‌های خاص",
     label: "Evening Glamour",
-    bg: "from-rose-100/40 via-white to-pink-200/30",
-    img: "https://picsum.photos/seed/hero6/1600/900",
+    bg: "from-orange-900/20 via-black to-stone-950",
     link: "/?category=heels",
     btnText: "مشاهده",
   },
@@ -76,8 +70,7 @@ const slides = [
     subtitle: "راحتی",
     desc: "کفش‌های روزمره برای استایل همیشگی شما",
     label: "Daily Comfort",
-    bg: "from-sky-100/40 via-white to-indigo-200/30",
-    img: "https://picsum.photos/seed/hero7/1600/900",
+    bg: "from-orange-800/15 via-black to-stone-950",
     link: "/?category=casual",
     btnText: "مشاهده",
   },
@@ -103,7 +96,7 @@ export default function HeroSlider() {
   const s = slides[current];
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-white">
+    <section className="relative h-screen w-full overflow-hidden bg-black">
       {slides.map((slide, i) => (
         <div
           key={slide.id}
@@ -112,16 +105,17 @@ export default function HeroSlider() {
           }`}
         >
           <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg}`} />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
           {!imgErrors.has(i) && (
             <img
-              src={slide.img}
+              src={`https://picsum.photos/seed/hero${slide.id}/1600/900`}
               alt=""
               onError={() => setImgErrors((prev) => new Set(prev).add(i))}
-              className="absolute inset-0 w-full h-full object-cover opacity-20"
+              className="absolute inset-0 w-full h-full object-cover opacity-30"
             />
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20" />
         </div>
       ))}
 
@@ -130,16 +124,16 @@ export default function HeroSlider() {
           <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--accent)] mb-4 font-medium">
             {s.label}
           </p>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-light text-[#111] leading-tight mb-2">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-light text-white leading-tight mb-2">
             {s.subtitle}
-            <span className="block font-semibold mt-1">{s.title}</span>
+            <span className="block font-bold mt-1 text-gradient">{s.title}</span>
           </h1>
-          <p className="text-gray-500 text-sm leading-relaxed mb-8 max-w-md">
+          <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md">
             {s.desc}
           </p>
           <Link
             href={s.link}
-            className="inline-flex items-center px-7 py-3.5 bg-[#111] text-white text-xs font-medium tracking-wider uppercase hover:bg-[#333] transition-all hover:translate-y-[-1px]"
+            className="inline-flex items-center px-8 py-3.5 btn-primary text-xs font-semibold tracking-wider uppercase"
           >
             {s.btnText}
           </Link>
@@ -148,7 +142,7 @@ export default function HeroSlider() {
 
       <button
         onClick={prev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/80 border border-[var(--border)] hover:bg-[#111] hover:text-white hover:border-[#111] transition-all text-gray-500 z-10"
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center glass hover:bg-[var(--accent)] hover:border-[var(--accent)] transition-all text-gray-500 hover:text-white z-10"
         aria-label="Previous slide"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -157,7 +151,7 @@ export default function HeroSlider() {
       </button>
       <button
         onClick={next}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/80 border border-[var(--border)] hover:bg-[#111] hover:text-white hover:border-[#111] transition-all text-gray-500 z-10"
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center glass hover:bg-[var(--accent)] hover:border-[var(--accent)] transition-all text-gray-500 hover:text-white z-10"
         aria-label="Next slide"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -172,15 +166,15 @@ export default function HeroSlider() {
             onClick={() => setCurrent(i)}
             className={`transition-all duration-300 ${
               i === current
-                ? "w-8 h-1.5 bg-[#111]"
-                : "w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400 rounded-full"
+                ? "w-8 h-1.5 bg-[var(--accent)] shadow-lg shadow-[var(--accent-glow)]"
+                : "w-1.5 h-1.5 bg-gray-600 hover:bg-gray-400 rounded-full"
             }`}
             aria-label={`Go to slide ${i + 1}`}
           />
         ))}
       </div>
 
-      <div className="absolute bottom-8 right-8 z-10 text-[10px] text-gray-400 font-mono tracking-wider">
+      <div className="absolute bottom-8 right-8 z-10 text-[10px] text-gray-600 font-mono tracking-wider">
         {String(current + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
       </div>
     </section>
