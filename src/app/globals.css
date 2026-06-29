@@ -447,3 +447,104 @@ html {
     display: none;
   }
 }
+
+/* ===== Mobile UX Improvements ===== */
+
+/* Safe area for bottom nav */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Better touch targets - all interactive elements */
+button, a, input, select, textarea, label {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text size adjust on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Mobile-friendly product grid */
+@media (max-width: 480px) {
+  .grid-cols-2 > *:nth-child(odd):last-child {
+    /* Handle single item in last row */
+  }
+
+  /* Larger touch targets for mobile */
+  .filter-tree-item,
+  .filter-checkbox {
+    padding: 8px;
+    min-height: 40px;
+  }
+
+  .filter-tree-item .count {
+    font-size: 11px;
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  .card-3d:hover {
+    transform: none;
+    animation: none;
+  }
+
+  .card-3d:hover .card-image {
+    transform: none;
+  }
+
+  .card-3d:hover::before {
+    opacity: 0;
+  }
+
+  .card-3d:hover .card-content {
+    transform: none;
+  }
+}
+
+/* Better spacing for RTL mobile */
+@media (max-width: 640px) {
+  .filter-drawer {
+    width: 85vw;
+    padding: 16px 12px;
+  }
+}
+
+/* Hide scrollbar on mobile category chips */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Transition for page content */
+main {
+  transition: opacity 0.2s ease;
+}
+
+/* Better form elements on mobile */
+input[type="number"].price-input {
+  -moz-appearance: textfield;
+}
+
+input[type="number"].price-input::-webkit-outer-spin-button,
+input[type="number"].price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Subtle animation for mobile nav appearance */
+@keyframes navSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

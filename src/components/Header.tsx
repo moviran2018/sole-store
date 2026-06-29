@@ -1,27 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
+import SearchDropdown from "@/components/SearchDropdown";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
   const { itemCount } = useCart();
 
-  useEffect(() => {
-    if (searchOpen && inputRef.current) inputRef.current.focus();
-  }, [searchOpen]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchVal.trim()) {
-      window.location.href = `/?q=${encodeURIComponent(searchVal.trim())}#products`;
-    }
-    setSearchOpen(false);
-  };
+  const closeSearch = () => { setSearchOpen(false); setSearchVal(""); };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass">
@@ -29,22 +19,16 @@ export default function Header() {
         <div className="flex items-center justify-between h-14 sm:h-16">
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <span className="text-lg sm:text-xl font-bold text-gradient">SOLE</span>
-            <span className="text-[9px] sm:text-[10px] text-gray-500 font-light tracking-[0.2em] uppercase">
-              STORE
-            </span>
+            <span className="text-[9px] sm:text-[10px] text-gray-500 font-light tracking-[0.2em] uppercase">STORE</span>
           </Link>
 
-          {/* Search bar - desktop */}
-          <form onSubmit={handleSearch} className="hidden md:block search-bar-header mx-3 lg:mx-6">
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          {/* Desktop search */}
+          <div className="hidden md:block search-bar-header mx-3 lg:mx-6">
+            <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
-            <input
-              ref={inputRef} type="text" placeholder="جستجوی محصول..." value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              className="w-full bg-[var(--muted)] border border-[var(--border)] focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 rounded-xl"
-            />
-          </form>
+            <SearchDropdown value={searchVal} onChange={setSearchVal} placeholder="جستجو در ۱۰۱ محصول..." />
+          </div>
 
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             <Link href="/" className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">خانه</Link>
@@ -54,8 +38,7 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Mobile search toggle */}
-            <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden text-gray-400 hover:text-[var(--accent)] p-1.5">
+            <button onClick={() => setSearchOpen(!searchOpen)} className="md:hidden text-gray-400 hover:text-[var(--accent)] p-1.5" aria-label="Search">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
@@ -72,7 +55,7 @@ export default function Header() {
               )}
             </Link>
 
-            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-gray-400 hover:text-[var(--accent)] p-1.5" aria-label="Toggle menu">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-gray-400 hover:text-[var(--accent)] p-1.5" aria-label="Menu">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 {menuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -84,23 +67,14 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile search bar */}
+        {/* Mobile search */}
         {searchOpen && (
-          <form onSubmit={(e) => { handleSearch(e); setSearchOpen(false); }} className="md:hidden pb-3">
-            <div className="relative">
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-              </svg>
-              <input
-                ref={inputRef} type="text" placeholder="جستجوی محصول..." value={searchVal}
-                onChange={(e) => setSearchVal(e.target.value)}
-                className="w-full pr-9 pl-3 py-2 text-xs bg-[var(--muted)] border border-[var(--border)] focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 rounded-xl"
-              />
-            </div>
-          </form>
+          <div className="md:hidden pb-3">
+            <SearchDropdown value={searchVal} onChange={setSearchVal} onSelect={closeSearch} placeholder="جستجو در ۱۰۱ محصول..." />
+          </div>
         )}
 
-        {/* Mobile menu */}
+        {/* Mobile fullscreen menu */}
         {menuOpen && (
           <div className="md:hidden fixed inset-0 top-14 bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center gap-8">
             <Link href="/" className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors" onClick={() => setMenuOpen(false)}>خانه</Link>

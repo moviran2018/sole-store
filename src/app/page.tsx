@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect } from "react";
 import ShoeCard from "@/components/ShoeCard";
 import HeroSlider from "@/components/HeroSlider";
+import SearchDropdown from "@/components/SearchDropdown";
 import { shoes, categories } from "@/data/shoes";
-import { useCart } from "@/lib/cart-context";
 
 const ALL_BRANDS = [...new Set(shoes.map((s) => s.brand))].sort();
 const PRICE_MIN = Math.min(...shoes.map((s) => s.price));
@@ -447,21 +447,10 @@ export default function Home() {
             {/* Search + Sort + Filter Button Bar */}
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-4 border-b border-[var(--border)]">
               <div className="relative flex-1">
-                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
-                <input
-                  type="text" placeholder="جستجو در بین همه محصولات..." value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-9 sm:pr-10 pl-3 sm:pl-4 py-2 sm:py-2.5 text-xs sm:text-sm bg-[var(--muted)] border border-[var(--border)] focus:outline-none focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 rounded-xl"
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery("")} className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white p-0.5">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
+                <SearchDropdown value={searchQuery} onChange={setSearchQuery} placeholder="جستجو در بین همه محصولات..." />
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
