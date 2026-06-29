@@ -10,13 +10,13 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-16">
+      <div className="min-h-screen flex items-center justify-center pt-16 px-4">
         <div className="text-center">
-          <svg className="w-16 h-16 mx-auto text-gray-700 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+          <svg className="w-14 sm:w-16 h-14 sm:h-16 mx-auto text-gray-700 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
           </svg>
           <p className="text-gray-400 text-sm mb-2">سبد خرید شما خالی است.</p>
-          <Link href="/#products" className="inline-flex items-center px-6 py-3 btn-primary text-xs font-semibold tracking-wider uppercase">
+          <Link href="/#products" className="inline-flex items-center px-6 py-3 btn-primary text-xs font-semibold tracking-wider uppercase rounded-xl">
             مشاهده محصولات
           </Link>
         </div>
@@ -30,62 +30,62 @@ export default function CartPage() {
   };
 
   return (
-    <div className="pt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
+    <div className="pt-14 sm:pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
             <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent)] font-medium mb-1">Shopping Cart</p>
-            <h1 className="text-2xl font-bold text-white">سبد خرید</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">سبد خرید</h1>
           </div>
           <button onClick={clearCart} className="text-xs text-gray-500 hover:text-red-500 transition-colors">حذف همه</button>
         </div>
 
-        <div className="space-y-4 mb-8">
+        <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
           {items.map((item) => {
             const itemKey = item.id + item.selectedSize + item.selectedColor;
             return (
-              <div key={itemKey} className="flex items-center gap-4 p-4 bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl">
+              <div key={itemKey} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl">
                 <Link href={`/products/${item.id}`} className="shrink-0">
-                  <div className="w-20 h-20 bg-[var(--muted)] overflow-hidden">
+                  <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[var(--muted)] overflow-hidden rounded-xl">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                   </div>
                 </Link>
 
                 <div className="flex-1 min-w-0">
                   <Link href={`/products/${item.id}`}>
-                    <h3 className="text-sm font-medium text-white truncate hover:text-[var(--accent)] transition-colors">{item.namePersian}</h3>
+                    <h3 className="text-xs sm:text-sm font-medium text-white truncate hover:text-[var(--accent)] transition-colors">{item.namePersian}</h3>
                   </Link>
-                  <p className="text-[10px] text-gray-500 mt-0.5">{item.brand}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-[10px] text-gray-500">سایز: {item.selectedSize}</span>
-                    <span className="flex items-center gap-1 text-[10px] text-gray-500">
-                      رنگ: <span className="w-3 h-3 rounded-full inline-block border border-gray-700"
+                  <p className="text-[9px] sm:text-[10px] text-gray-500 mt-0.5">{item.brand}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1 flex-wrap">
+                    <span className="text-[9px] sm:text-[10px] text-gray-500">سایز: {item.selectedSize}</span>
+                    <span className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-500">
+                      <span className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full inline-block border border-gray-700"
                         style={{ backgroundColor: item.colors.find((c) => c.name === item.selectedColor)?.hex || "#ccc" }} />
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-[var(--accent)] mt-1">
+                  <p className="text-[11px] sm:text-xs font-medium text-[var(--accent)] mt-0.5 sm:mt-1">
                     {new Intl.NumberFormat("fa-IR").format(item.price)}
-                    <span className="text-[9px] text-gray-500 mr-1">تومان</span>
+                    <span className="text-[8px] sm:text-[9px] text-gray-500 mr-0.5">تومان</span>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <button onClick={() => updateQuantity(itemKey, item.quantity - 1)}
-                    className="w-7 h-7 flex items-center justify-center border border-[var(--border)] text-gray-500 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all text-xs">-</button>
-                  <span className="w-8 text-center text-sm font-medium text-white">{item.quantity}</span>
+                    className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center border border-[var(--border)] text-gray-500 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all text-xs rounded-lg">-</button>
+                  <span className="w-6 sm:w-8 text-center text-xs sm:text-sm font-medium text-white">{item.quantity}</span>
                   <button onClick={() => updateQuantity(itemKey, item.quantity + 1)}
-                    className="w-7 h-7 flex items-center justify-center border border-[var(--border)] text-gray-500 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all text-xs">+</button>
+                    className="w-6 sm:w-7 h-6 sm:h-7 flex items-center justify-center border border-[var(--border)] text-gray-500 hover:bg-[var(--accent)] hover:text-white hover:border-[var(--accent)] transition-all text-xs rounded-lg">+</button>
                 </div>
 
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-bold text-white">
+                <div className="text-right shrink-0 hidden sm:block">
+                  <p className="text-xs sm:text-sm font-bold text-white">
                     {new Intl.NumberFormat("fa-IR").format(item.price * item.quantity)}
                     <span className="text-[9px] text-gray-500 mr-1">تومان</span>
                   </p>
                 </div>
 
-                <button onClick={() => removeItem(itemKey)} className="text-gray-600 hover:text-red-500 transition-colors">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <button onClick={() => removeItem(itemKey)} className="text-gray-600 hover:text-red-500 transition-colors p-1">
+                  <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                   </svg>
                 </button>
@@ -94,7 +94,21 @@ export default function CartPage() {
           })}
         </div>
 
-        <div className="border-t border-[var(--border)] pt-6">
+        {/* Mobile total bar */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-[#111] border-t border-[var(--border)] p-4 z-30">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-gray-400">مجموع</span>
+            <span className="text-sm font-bold text-[var(--accent)]">{new Intl.NumberFormat("fa-IR").format(total)} تومان</span>
+          </div>
+          {showConfirm ? (
+            <div className="w-full py-3 bg-green-600 text-white text-sm font-medium text-center rounded-xl shadow-lg">سفارش شما ثبت شد! ✓</div>
+          ) : (
+            <button onClick={handleCheckout} className="w-full py-3 btn-primary text-sm font-semibold tracking-wider uppercase rounded-xl">ثبت سفارش</button>
+          )}
+        </div>
+
+        {/* Desktop summary */}
+        <div className="hidden sm:block border-t border-[var(--border)] pt-6">
           <div className="max-w-md mr-auto">
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-sm"><span className="text-gray-500">تعداد کالا</span><span className="font-medium text-white">{itemCount}</span></div>
@@ -104,16 +118,17 @@ export default function CartPage() {
                 <span className="text-[var(--accent)]">{new Intl.NumberFormat("fa-IR").format(total)}<span className="text-[10px] text-gray-500 mr-1 font-normal">تومان</span></span>
               </div>
             </div>
-
             {showConfirm ? (
-              <div className="w-full py-3.5 bg-green-600 text-white text-sm font-medium text-center tracking-wider shadow-lg">سفارش شما ثبت شد! ✓</div>
+              <div className="w-full py-3.5 bg-green-600 text-white text-sm font-medium text-center rounded-xl shadow-lg">سفارش شما ثبت شد! ✓</div>
             ) : (
-              <button onClick={handleCheckout} className="w-full py-3.5 btn-primary text-sm font-semibold tracking-wider uppercase">ثبت سفارش</button>
+              <button onClick={handleCheckout} className="w-full py-3.5 btn-primary text-sm font-semibold tracking-wider uppercase rounded-xl">ثبت سفارش</button>
             )}
-
             <Link href="/#products" className="block text-center text-xs text-gray-500 hover:text-[var(--accent)] transition-colors mt-4">ادامه خرید</Link>
           </div>
         </div>
+
+        {/* Mobile extra padding for fixed bottom bar */}
+        <div className="sm:hidden h-24" />
       </div>
     </div>
   );
