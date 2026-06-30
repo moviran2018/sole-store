@@ -165,10 +165,9 @@
     }
   }
 
-  addMessage("bot", WELCOME);
-
   injectStyles();
   const dom = createDOM();
+  addMessage("bot", WELCOME);
   dom.input.focus();
 
   function botReply(q, products, knowledge) {
