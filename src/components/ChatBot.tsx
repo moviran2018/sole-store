@@ -4,7 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getAiClient, hasAiConfigured } from "@/lib/ai-client";
 import { getKnowledgeBase, buildKnowledgePrompt } from "@/lib/knowledge";
-import { getAllShoes } from "@/lib/shoe-store";
+import { loadChatbotSettings } from "@/lib/chatbot-settings";
+import { buildStoreSummary } from "@/lib/chatbot-data";
+import { getAllShoes, getOrders, getMessages } from "@/lib/shoe-store";
 import type { Shoe } from "@/types/shoe";
 import type { KnowledgeEntry } from "@/lib/knowledge";
 
@@ -42,39 +44,50 @@ function makeProductCatalog(products: Shoe[]): string {
   return catalog;
 }
 
-function makeSystemPrompt(products: Shoe[], knowledgeEntries: KnowledgeEntry[]): string {
+function makeSystemPrompt(
+  products: Shoe[],
+  knowledgeEntries: KnowledgeEntry[],
+  customPrompt: string,
+  storeSummary: string,
+): string {
   const catList = [...new Set(products.map((s) => s.categoryPersian))].join(", ");
   const brandList = [...new Set(products.map((s) => s.brand))].join(", ");
-
-  const catalog = makeProductCatalog(products);
   const knowledge = buildKnowledgePrompt(knowledgeEntries);
+
+  if (customPrompt.trim()) {
+    return `${customPrompt.trim()}
+
+## STORE DATA (USE THIS FOR ACCURATE ANSWERS)
+${storeSummary}
+
+## KNOWLEDGE BASE
+${knowledge || "No additional entries."}
+
+## RULES
+- Persian language only.
+- Always include /products/{id} links with product recommendations.
+- NEVER make up products or prices. Only use the STORE DATA above.
+- If the question is outside store scope, say: "من فقط درباره محصولات و خدمات Sole میتونم کمک کنم."`;
+  }
 
   return `You are SoleBot, a Persian AI assistant for Sole Store shoe shop.
 
 ## YOUR JOB
 Answer customer questions ONLY about Sole Store products, policies, and services. Be friendly, concise, and helpful. Always use Persian (fa-IR).
 
-## WHEN ASKED ABOUT PRODUCTS
-Search the product catalog below. Recommend matching products with name, price, and link: /products/{id}. If none match, say you couldn't find an exact match.
+## STORE DATA (USE THIS FOR ACCURATE ANSWERS)
+${storeSummary}
 
-## STORE INFO
-- Categories: ${catList}
-- Brands: ${brandList}
-- ${products.length} products total
-- Free shipping over 2,000,000 Toman, delivery 3-5 days
-- 7-day return policy
-- Payment: online via Zarinpal
-
-## PRODUCT CATALOG
-${catalog || "No products available."}
-
-## STORE KNOWLEDGE BASE
-${knowledge || "No additional information."}
+## KNOWLEDGE BASE
+${knowledge || "No additional entries."}
 
 ## RULES
-- Persian language only
-- Always include /products/{id} links with product recommendations
-- NEVER make up products or prices. Only use the catalog above.
+- Persian language only.
+- Always include /products/{id} links with product recommendations.
+- NEVER make up products or prices. Only use the STORE DATA above.
+- Free shipping over 2,000,000 Toman, delivery 3-5 days.
+- 7-day return policy.
+- Payment: online via Zarinpal.
 - If the customer asks about profanity, respond: "❌ لطفاً محترمانه سوال خود را مطرح کنید."
 - If the question is outside store scope, respond: "من فقط درباره محصولات و خدمات Sole میتونم کمک کنم."`;
 }
@@ -188,6 +201,8 @@ export default function ChatBot({ products }: Props) {
   const [loading, setLoading] = useState(false);
   const [allProducts, setAllProducts] = useState<Shoe[]>(products);
   const [knowledge, setKnowledge] = useState<KnowledgeEntry[]>([]);
+  const [customSysPrompt, setCustomSysPrompt] = useState("");
+  const [storeSummary, setStoreSummary] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const micHoldRef = useRef(false);
@@ -197,11 +212,15 @@ export default function ChatBot({ products }: Props) {
 
   // Load fresh data on mount
   useEffect(() => {
-    getAllShoes().then(setAllProducts);
-    getKnowledgeBase().then(setKnowledge);
+    Promise.all([getAllShoes(), getKnowledgeBase(), loadChatbotSettings()]).then(([shoes, kb, settings]) => {
+      setAllProducts(shoes);
+      setKnowledge(kb);
+      setCustomSysPrompt(settings.systemPrompt);
+      setStoreSummary(buildStoreSummary(shoes).text);
+    });
   }, []);
 
-  const sysPrompt = makeSystemPrompt(allProducts, knowledge);
+  const sysPrompt = makeSystemPrompt(allProducts, knowledge, customSysPrompt, storeSummary);
 
   useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: "smooth" });

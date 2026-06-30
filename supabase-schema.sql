@@ -78,13 +78,24 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ===== CHATBOT SETTINGS =====
+CREATE TABLE IF NOT EXISTS chatbot_settings (
+  id TEXT PRIMARY KEY DEFAULT 'main',
+  system_prompt TEXT DEFAULT '',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE chatbot_settings ADD COLUMN IF NOT EXISTS system_prompt TEXT DEFAULT '';
+
 -- ===== RLS POLICIES =====
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chatbot_settings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "public_all" ON products FOR ALL USING (true);
 CREATE POLICY "public_all" ON orders FOR ALL USING (true);
 CREATE POLICY "public_all" ON messages FOR ALL USING (true);
 CREATE POLICY "public_all" ON knowledge_base FOR ALL USING (true);
+CREATE POLICY "public_all" ON chatbot_settings FOR ALL USING (true);

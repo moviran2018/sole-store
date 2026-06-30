@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getKnowledgeBase, addKnowledge, deleteKnowledge, type KnowledgeEntry, type KnowledgeMedia } from "@/lib/knowledge";
+import { getChatbotSettings, saveChatbotSettings, loadChatbotSettings } from "@/lib/chatbot-settings";
 
 const entryTypes = [
   { id: "faq", label: "سوالات متداول" },
@@ -16,8 +17,15 @@ export default function KnowledgePage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<KnowledgeEntry | null>(null);
   const [form, setForm] = useState({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "", documentLinks: "", driveLinks: "" });
+  const [sysPrompt, setSysPrompt] = useState("");
+  const [sysPromptOpen, setSysPromptOpen] = useState(false);
+  const [sysPromptSaving, setSysPromptSaving] = useState(false);
 
   useEffect(() => { getKnowledgeBase().then(setEntries); }, []);
+
+  useEffect(() => {
+    loadChatbotSettings().then((s) => setSysPrompt(s.systemPrompt));
+  }, []);
 
   const resetForm = () => setForm({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "", documentLinks: "", driveLinks: "" });
 
@@ -82,6 +90,43 @@ export default function KnowledgePage() {
           className="bg-orange-600 hover:bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-lg shadow-orange-600/25">
           {showForm ? "بستن" : "+ افزودن مدخل"}
         </button>
+      </div>
+
+      {/* ---------- System Prompt Section ---------- */}
+      <div className="bg-gray-900/20 border border-gray-800/50 rounded-2xl mb-6 overflow-hidden">
+        <button onClick={() => setSysPromptOpen(!sysPromptOpen)}
+          className="w-full flex items-center justify-between p-4 text-right">
+          <div>
+            <span className="text-orange-400 font-semibold text-sm">🤖 تنظیمات سیستم پرامپت چت‌بات</span>
+            <p className="text-xs text-gray-500 mt-0.5">شخصیت، لحن، قوانین و نحوه برخورد با مشتری را تعریف کنید</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 text-gray-400 transition-transform ${sysPromptOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {sysPromptOpen && (
+          <div className="px-4 pb-4 space-y-3">
+            <p className="text-[10px] text-gray-600 leading-relaxed">
+              این متن به عنوان <strong className="text-gray-400">System Prompt</strong> اصلی به مدل هوش مصنوعی فرستاده میشود.
+              شخصیت، لحن، محدودیت‌ها و نحوه پاسخگویی ربات را تعریف کنید. 
+              اگر خالی بماند، از پرامپت پیش‌فرض استفاده میشود.
+            </p>
+            <textarea value={sysPrompt} onChange={(e) => setSysPrompt(e.target.value)} rows={8} dir="rtl"
+              placeholder="مثال: تو یک دستیار فروش حرفه‌ای هستی. با لحنی گرم و دوستانه با مشتری صحبت کن. همیشه قیمت را به تومان اعلام کن و لینک محصول را هم بده. اگر مشتری عصبانی است، اول عذرخواهی کن..."
+              className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500/50" />
+            <div className="flex items-center gap-3">
+              <button onClick={async () => {
+                setSysPromptSaving(true);
+                await saveChatbotSettings({ systemPrompt: sysPrompt });
+                setSysPromptSaving(false);
+              }} disabled={sysPromptSaving}
+                className="bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-medium transition-all">
+                {sysPromptSaving ? "در حال ذخیره..." : "💾 ذخیره سیستم پرامپت"}
+              </button>
+              <span className="text-[10px] text-gray-600">{(sysPrompt.length || 0).toLocaleString("fa-IR")} کاراکتر</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {showForm && (
