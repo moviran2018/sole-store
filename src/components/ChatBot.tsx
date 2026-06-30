@@ -202,7 +202,8 @@ export default function ChatBot({ products }: Props) {
   const [allProducts, setAllProducts] = useState<Shoe[]>(products);
   const [knowledge, setKnowledge] = useState<KnowledgeEntry[]>([]);
   const [customSysPrompt, setCustomSysPrompt] = useState("");
-  const [storeSummary, setStoreSummary] = useState("");
+  const [storeSummary, setStoreSummary] = useState(() => buildStoreSummary(products).text);
+  const [dataReady, setDataReady] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const micHoldRef = useRef(false);
@@ -217,6 +218,7 @@ export default function ChatBot({ products }: Props) {
       setKnowledge(kb);
       setCustomSysPrompt(settings.systemPrompt);
       setStoreSummary(buildStoreSummary(shoes).text);
+      setDataReady(true);
     });
   }, []);
 
