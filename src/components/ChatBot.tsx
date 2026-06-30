@@ -427,10 +427,112 @@ function renderMessage(text: string): React.ReactNode {
   });
 }
 
+/** Extract the most relevant snippet from a large content based on user query */
+function findRelevantSnippet(content: string, query: string): string {
+  if (content.length < 600) return content;
+
+  const cLower = content.toLowerCase();
+  const qLower = query.toLowerCase();
+
+  const idx = cLower.indexOf(qLower);
+  if (idx !== -1) {
+    const start = Math.max(0, idx - 150);
+    const end = Math.min(content.length, idx + qLower.length + 300);
+    let s = content.slice(start, end);
+    if (start > 0) s = "... " + s;
+    if (end < content.length) s = s + " ...";
+    return s;
+  }
+
+  const words = qLower.split(/\s+/).filter((w) => w.length >= 3);
+  for (const word of words) {
+    const idx = cLower.indexOf(word);
+    if (idx !== -1) {
+      const start = Math.max(0, idx - 150);
+      const end = Math.min(content.length, idx + word.length + 300);
+      let s = content.slice(start, end);
+      if (start > 0) s = "... " + s;
+      if (end < content.length) s = s + " ...";
+      return s;
+    }
+  }
+
+  return content.slice(0, 500) + " ...";
+}
+
 /* ── Fallback rule-based reply ── */
 function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = []): string {
   const query = q.toLowerCase();
 
+  // 1) Greeting
+  if (/سلام|درود|خوبی|hello|hi/i.test(query)) {
+    return "سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمکتان کنم؟ 😊";
+  }
+
+  // 2) Specific product search (by name or brand)
+  const matched = products.filter((p) =>
+    p.namePersian.includes(query) || p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+  ).slice(0, 3);
+  if (matched.length > 0) {
+    return matched.map((p) =>
+      `**${p.namePersian}** (${p.brand}) - ${p.price.toLocaleString("fa-IR")} تومان\nبرای مشاهده: /products/${p.id}`
+    ).join("\n\n");
+  }
+
+  // 3) Category-based search
+  const catMap: Record<string, string[]> = {
+    کتانی: ["sneakers"], sneaker: ["sneakers"],
+    دویدن: ["running"], run: ["running"],
+    رسمی: ["formal"], formal: ["formal"],
+    چکمه: ["boots"], boot: ["boots"],
+    صندل: ["sandals"], sandal: ["sandals"],
+    پاشنه: ["heels"], heel: ["heels"],
+    ورزشی: ["sport"], sport: ["sport"],
+  };
+  for (const [kw, cats] of Object.entries(catMap)) {
+    if (query.includes(kw)) {
+      const cat = cats[0];
+      const catName = products.find((s) => s.category === cat)?.categoryPersian || cat;
+      const items = products.filter((s) => s.category === cat).slice(0, 4);
+      if (items.length === 0) return `دسته ${catName} محصولی ندارد.`;
+      return `محصولات ${catName}:\n` + items.map((p) =>
+        `- **${p.namePersian}** ${p.price.toLocaleString("fa-IR")} تومان\n  /products/${p.id}`
+      ).join("\n");
+    }
+  }
+
+  // 4) Sale / discount
+  if (/تخفیف|حراج|sale|شگفت‌انگیز/i.test(query)) {
+    const saleItems = products.filter((s) => s.sale);
+    if (saleItems.length === 0) return "در حال حاضر تخفیفی نداریم.";
+    return saleItems.slice(0, 5).map((p) =>
+      `🔥 **${p.namePersian}** ${p.discount}% تخفیف! ${(p.price * (1 - (p.discount || 0) / 100)).toLocaleString("fa-IR")} تومان\n/products/${p.id}`
+    ).join("\n\n") + `\n\n${saleItems.length > 5 ? `و ${saleItems.length - 5} محصول دیگر` : ""}`;
+  }
+
+  // 5) New arrivals
+  if (/جدید|new/i.test(query)) {
+    const newItems = products.filter((s) => s.new);
+    if (newItems.length === 0) return "در حال حاضر محصول جدیدی نداریم.";
+    return newItems.slice(0, 5).map((p) =>
+      `🆕 **${p.namePersian}** - ${p.price.toLocaleString("fa-IR")} تومان\n/products/${p.id}`
+    ).join("\n\n");
+  }
+
+  // 6) Price range
+  if (/قیمت|قیمتها|ارزان|گران/i.test(query)) {
+    const minP = Math.min(...products.map((s) => s.price));
+    const maxP = Math.max(...products.map((s) => s.price));
+    return `محصولات ما از ${minP.toLocaleString("fa-IR")} تا ${maxP.toLocaleString("fa-IR")} تومان هستند.`;
+  }
+
+  // 7) Brand list
+  if (/برند|brand/i.test(query)) {
+    const brands = [...new Set(products.map((s) => s.brand))];
+    return `برندها: ${brands.slice(0, 25).join("، ")}${brands.length > 25 ? " و..." : ""}`;
+  }
+
+  // 8) Knowledge base – only as last resort, return relevant snippet
   for (const entry of knowledge) {
     const tags = entry.tags.map((t) => t.toLowerCase());
     const contentLower = entry.content.toLowerCase();
@@ -441,7 +543,7 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
       || contentLower.includes(query)
       || queryWords.some((w) => contentLower.includes(w));
     if (match) {
-      let reply = entry.content;
+      let reply = findRelevantSnippet(entry.content, query);
       if (entry.media) {
         if (entry.media.imageLinks.length) reply += "\n\n" + entry.media.imageLinks.join("\n");
         if (entry.media.audioLinks.length) reply += "\n\n" + entry.media.audioLinks.join("\n");
@@ -450,70 +552,6 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
         if (entry.media.driveLinks.length) reply += "\n\n" + entry.media.driveLinks.join("\n");
       }
       return reply;
-    }
-  }
-
-  if (/سلام|درود|خوبی|hello|hi/i.test(query)) {
-    return "سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمکتان کنم؟ 😊";
-  }
-
-  // Find matching products by name
-  const matched = products.filter((p) =>
-    p.namePersian.includes(query) || p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
-  ).slice(0, 3);
-
-  if (matched.length > 0) {
-    return matched.map((p) =>
-      `**${p.namePersian}** (${p.brand}) - ${p.price.toLocaleString("fa-IR")} تومان\nبرای مشاهده: /products/${p.id}`
-    ).join("\n\n");
-  }
-
-  if (/قیمت|قیمتها|ارزان|گران/i.test(query)) {
-    const minP = Math.min(...products.map((s) => s.price));
-    const maxP = Math.max(...products.map((s) => s.price));
-    return `محصولات ما از ${minP.toLocaleString("fa-IR")} تا ${maxP.toLocaleString("fa-IR")} تومان هستند.`;
-  }
-
-  if (/تخفیف|حراج|sale|شگفت‌انگیز/i.test(query)) {
-    const saleItems = products.filter((s) => s.sale);
-    if (saleItems.length === 0) return "در حال حاضر تخفیفی نداریم.";
-    return saleItems.slice(0, 5).map((p) =>
-      `🔥 **${p.namePersian}** ${p.discount}% تخفیف! ${(p.price * (1 - (p.discount || 0) / 100)).toLocaleString("fa-IR")} تومان\n/products/${p.id}`
-    ).join("\n\n") + `\n\n${saleItems.length > 5 ? `و ${saleItems.length - 5} محصول دیگر` : ""}`;
-  }
-
-  if (/جدید|new/i.test(query)) {
-    const newItems = products.filter((s) => s.new);
-    if (newItems.length === 0) return "در حال حاضر محصول جدیدی نداریم.";
-    return newItems.slice(0, 5).map((p) =>
-      `🆕 **${p.namePersian}** - ${p.price.toLocaleString("fa-IR")} تومان\n/products/${p.id}`
-    ).join("\n\n");
-  }
-
-  if (/برند|brand/i.test(query)) {
-    const brands = [...new Set(products.map((s) => s.brand))];
-    return `برندها: ${brands.slice(0, 25).join("، ")}${brands.length > 25 ? " و..." : ""}`;
-  }
-
-  const catMap: Record<string, string[]> = {
-    کتانی: ["sneakers"], sneaker: ["sneakers"],
-    دویدن: ["running"], run: ["running"],
-    رسمی: ["formal"], formal: ["formal"],
-    چکمه: ["boots"], boot: ["boots"],
-    صندل: ["sandals"], sandal: ["sandals"],
-    پاشنه: ["heels"], heel: ["heels"],
-    ورزشی: ["sport"], sport: ["sport"],
-  };
-
-  for (const [kw, cats] of Object.entries(catMap)) {
-    if (query.includes(kw)) {
-      const cat = cats[0];
-      const catName = products.find((s) => s.category === cat)?.categoryPersian || cat;
-      const items = products.filter((s) => s.category === cat).slice(0, 4);
-      if (items.length === 0) return `دسته ${catName} محصولی ندارد.`;
-      return `محصولات ${catName}:\n` + items.map((p) =>
-        `- **${p.namePersian}** ${p.price.toLocaleString("fa-IR")} تومان\n  /products/${p.id}`
-      ).join("\n");
     }
   }
 
