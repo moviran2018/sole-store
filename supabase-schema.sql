@@ -1,4 +1,18 @@
--- Products table
+-- =============================================
+-- Sole Store – Full Schema (safe to re-run)
+-- =============================================
+
+-- Drop all existing policies first
+DO $$
+DECLARE
+  pol RECORD;
+BEGIN
+  FOR pol IN SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public' AND tablename IN ('products','orders','messages','knowledge_base') LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', pol.policyname, pol.tablename);
+  END LOOP;
+END $$;
+
+-- ===== PRODUCTS =====
 CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -25,7 +39,12 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Orders table
+-- Add new columns if they don't exist (for existing tables)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_links TEXT DEFAULT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS podcast_link TEXT DEFAULT NULL;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS video_link TEXT DEFAULT NULL;
+
+-- ===== ORDERS =====
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   items TEXT DEFAULT '[]',
@@ -37,7 +56,7 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Messages table
+-- ===== MESSAGES =====
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
@@ -47,7 +66,7 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Knowledge base table for chatbot
+-- ===== KNOWLEDGE BASE =====
 CREATE TABLE IF NOT EXISTS knowledge_base (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
@@ -57,18 +76,13 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Allow public access (since we use anon key from client)
+-- ===== RLS POLICIES =====
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Allow anon all" ON products;
-DROP POLICY IF EXISTS "Allow anon all" ON orders;
-DROP POLICY IF EXISTS "Allow anon all" ON messages;
-DROP POLICY IF EXISTS "Allow anon all" ON knowledge_base;
-
-CREATE POLICY "Allow anon all" ON products FOR ALL USING (true);
-CREATE POLICY "Allow anon all" ON orders FOR ALL USING (true);
-CREATE POLICY "Allow anon all" ON messages FOR ALL USING (true);
-CREATE POLICY "Allow anon all" ON knowledge_base FOR ALL USING (true);
+CREATE POLICY "public_all" ON products FOR ALL USING (true);
+CREATE POLICY "public_all" ON orders FOR ALL USING (true);
+CREATE POLICY "public_all" ON messages FOR ALL USING (true);
+CREATE POLICY "public_all" ON knowledge_base FOR ALL USING (true);

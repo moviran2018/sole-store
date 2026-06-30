@@ -455,7 +455,7 @@ export default function Home() {
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
-                <SearchDropdown value={searchQuery} onChange={setSearchQuery} placeholder="جستجو در بین همه محصولات..." products={shoes} />
+                <SearchDropdown value={searchQuery} onChange={setSearchQuery} placeholder="جستجو در بین همه محصولات..." />
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">

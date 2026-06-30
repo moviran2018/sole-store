@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { getAiClient, hasAiConfigured } from "@/lib/ai-client";
 import { getKnowledgeBase, buildKnowledgePrompt } from "@/lib/knowledge";
+import { getAllShoes } from "@/lib/shoe-store";
 import type { Shoe } from "@/types/shoe";
 import type { KnowledgeEntry } from "@/lib/knowledge";
 
@@ -11,19 +13,59 @@ interface Message {
   text: string;
 }
 
-function makeSystemPrompt(products: Shoe[], knowledgeEntries: KnowledgeEntry[]): string {
-  const cats = [...new Set(products.map((s) => s.categoryPersian))];
-  const brands = [...new Set(products.map((s) => s.brand))];
-  const minP = Math.min(...products.map((s) => s.price));
-  const maxP = Math.max(...products.map((s) => s.price));
+function makeProductCatalog(products: Shoe[]): string {
+  const byCategory = new Map<string, Shoe[]>();
+  for (const p of products) {
+    const list = byCategory.get(p.category) || [];
+    list.push(p);
+    byCategory.set(p.category, list);
+  }
 
-  let prompt = `You are a Persian-speaking shoe store assistant for "Sole Store" (فروشگاه Sole).
-CRITICAL: Answer ONLY about the store's products and policies. If asked about anything else, politely refuse.
-Product range: ${cats.join(", ")}.
-Brands: ${brands.join(", ")}.
-Price range: ${minP.toLocaleString("fa-IR")} to ${maxP.toLocaleString("fa-IR")} تومان.
-Total products: ${products.length}.
-Use Persian (fa-IR). Be brief, friendly, and helpful.`;
+  let catalog = "## PRODUCT CATALOG\n";
+  for (const [cat, items] of byCategory) {
+    const persian = items[0]?.categoryPersian || cat;
+    catalog += `\n### ${persian} (${items.length} products)\n`;
+    const top = items.slice(0, 5);
+    for (const p of top) {
+      const flags = [];
+      if (p.new) flags.push("جدید");
+      if (p.sale) flags.push(`تخفیف ${p.discount}%`);
+      if (p.featured) flags.push("ویژه");
+      const tag = flags.length ? ` [${flags.join(", ")}]` : "";
+      const priceDisplay = p.sale && p.discount
+        ? `${(p.price * (1 - p.discount / 100)).toLocaleString("fa-IR")} تومان`
+        : `${p.price.toLocaleString("fa-IR")} تومان`;
+      catalog += `- **${p.namePersian}** (${p.brand}) - ${priceDisplay}${tag}\n  Link: /products/${p.id}\n`;
+    }
+    if (items.length > 5) catalog += `  ... and ${items.length - 5} more\n`;
+  }
+  return catalog;
+}
+
+function makeSystemPrompt(products: Shoe[], knowledgeEntries: KnowledgeEntry[]): string {
+  const catList = [...new Set(products.map((s) => s.categoryPersian))].join(", ");
+  const brandList = [...new Set(products.map((s) => s.brand))].join(", ");
+
+  let prompt = `You are SoleBot, the Persian AI assistant for Sole Store.
+You MUST ONLY answer about the store's products, policies, and services. Politely refuse anything else.
+
+## STORE INFO
+- Product categories: ${catList}
+- Brands: ${brandList}
+- Total products: ${products.length} items
+- Shipping: Free for orders > 2,000,000 تومان, 3-5 days
+- Returns: Within 7 days
+- Payment: Online payment via Zarinpal or test gateway
+
+## RULES
+1. Answer ONLY about Sole Store products and policies
+2. When recommending a product, ALWAYS include its direct link: /products/{id}
+3. Use Persian (fa-IR) in a friendly tone
+4. Be concise but helpful
+5. If asked something outside store scope, say: "من فقط می‌توانم درباره محصولات و خدمات فروشگاه Sole به شما کمک کنم."`;
+
+  const catalog = makeProductCatalog(products);
+  if (catalog) prompt += `\n\n${catalog}`;
 
   const knowledge = buildKnowledgePrompt(knowledgeEntries);
   if (knowledge) prompt += `\n\n--- STORE KNOWLEDGE BASE ---\n${knowledge}`;
@@ -42,15 +84,20 @@ export default function ChatBot({ products }: Props) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [allProducts, setAllProducts] = useState<Shoe[]>(products);
   const [knowledge, setKnowledge] = useState<KnowledgeEntry[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const ai = getAiClient();
 
-  useEffect(() => { getKnowledgeBase().then(setKnowledge); }, []);
+  // Load fresh data on mount
+  useEffect(() => {
+    getAllShoes().then(setAllProducts);
+    getKnowledgeBase().then(setKnowledge);
+  }, []);
 
-  const sysPrompt = makeSystemPrompt(products, knowledge);
+  const sysPrompt = makeSystemPrompt(allProducts, knowledge);
 
   useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,15 +128,14 @@ export default function ChatBot({ products }: Props) {
       }
     } else {
       setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: botReply(q, products, knowledge) }]);
+        setMessages((prev) => [...prev, { role: "bot", text: botReply(q, allProducts, knowledge) }]);
         setLoading(false);
       }, 500);
     }
-  }, [input, loading, messages, ai, sysPrompt, products]);
+  }, [input, loading, messages, ai, sysPrompt, allProducts, knowledge]);
 
   return (
     <>
-      {/* Toggle button */}
       <button onClick={() => setOpen(!open)}
         className="fixed bottom-5 left-5 z-50 w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-xl shadow-orange-600/30 hover:shadow-orange-600/50 hover:scale-105 transition-all grid place-items-center">
         {open ? (
@@ -103,9 +149,7 @@ export default function ChatBot({ products }: Props) {
         )}
       </button>
 
-      {/* Chat panel */}
       <div className={`fixed bottom-20 left-5 z-50 w-[360px] max-w-[calc(100vw-40px)] h-[520px] max-h-[calc(100vh-160px)] bg-[#111] border border-gray-800 rounded-3xl shadow-2xl shadow-black/80 flex flex-col overflow-hidden transition-all duration-300 ${open ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95 pointer-events-none"}`}>
-        {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-gray-800 bg-gradient-to-r from-orange-600/10 to-transparent">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-lg shadow-lg shadow-orange-600/20">🤖</div>
           <div>
@@ -114,7 +158,6 @@ export default function ChatBot({ products }: Props) {
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}>
@@ -123,7 +166,7 @@ export default function ChatBot({ products }: Props) {
                   ? "bg-orange-600/20 border border-orange-600/30 text-white"
                   : "bg-gray-800/50 border border-gray-700/50 text-gray-300"
               }`}>
-                {msg.text}
+                {renderMessage(msg.text)}
               </div>
             </div>
           ))}
@@ -141,7 +184,6 @@ export default function ChatBot({ products }: Props) {
           <div ref={endRef} />
         </div>
 
-        {/* Input */}
         <div className="p-3 border-t border-gray-800">
           <div className="flex items-center gap-2">
             <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
@@ -157,7 +199,7 @@ export default function ChatBot({ products }: Props) {
           </div>
           {!hasAiConfigured() && (
             <p className="text-[9px] text-gray-700 mt-1.5 text-center">
-              پاسخ‌های پیش‌فرض • برای هوش مصنوعی، API Key در .env.local تنظیم کنید
+              پاسخ‌های پیش‌فرض • برای هوش مصنوعی، API Key تنظیم کنید
             </p>
           )}
         </div>
@@ -166,11 +208,22 @@ export default function ChatBot({ products }: Props) {
   );
 }
 
-/* ── Fallback rule-based reply (when no AI configured) ── */
+/** Convert markdown-style links `/products/xxx` to clickable <a> tags */
+function renderMessage(text: string): React.ReactNode {
+  const parts = text.split(/(\/products\/[\w-]+)/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\/products\/([\w-]+)$/);
+    if (match) {
+      return <Link key={i} href={part} className="text-orange-400 hover:text-orange-300 underline text-xs">🔗 مشاهده محصول</Link>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
+/* ── Fallback rule-based reply ── */
 function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = []): string {
   const query = q.toLowerCase();
 
-  // Check knowledge base first
   for (const entry of knowledge) {
     const tags = entry.tags.map((t) => t.toLowerCase());
     const match = tags.some((t) => query.includes(t)) || query.includes(entry.title.toLowerCase());
@@ -181,21 +234,42 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
     return "سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمکتان کنم؟ 😊";
   }
 
+  // Find matching products by name
+  const matched = products.filter((p) =>
+    p.namePersian.includes(query) || p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+  ).slice(0, 3);
+
+  if (matched.length > 0) {
+    return matched.map((p) =>
+      `**${p.namePersian}** (${p.brand}) - ${p.price.toLocaleString("fa-IR")} تومان\nبرای مشاهده: /products/${p.id}`
+    ).join("\n\n");
+  }
+
   if (/قیمت|قیمتها|ارزان|گران/i.test(query)) {
     const minP = Math.min(...products.map((s) => s.price));
     const maxP = Math.max(...products.map((s) => s.price));
-    return `محصولات ما از ${minP.toLocaleString("fa-IR")} تا ${maxP.toLocaleString("fa-IR")} تومان متغیر هستند. می‌توانید با استفاده از فیلترهای سایت، محدوده قیمت دلخواه خود را انتخاب کنید.`;
+    return `محصولات ما از ${minP.toLocaleString("fa-IR")} تا ${maxP.toLocaleString("fa-IR")} تومان هستند.`;
   }
 
   if (/تخفیف|حراج|sale|شگفت‌انگیز/i.test(query)) {
     const saleItems = products.filter((s) => s.sale);
-    if (saleItems.length === 0) return "در حال حاضر محصولی با تخفیف ویژه نداریم. برای اطلاع از آخرین تخفیف‌ها، صفحه اصلی سایت را دنبال کنید.";
-    return `${saleItems.length} محصول با تخفیف ویژه داریم! 🎉 برای مشاهده، بخش "تخفیف‌های ویژه" در صفحه اصلی را ببینید.`;
+    if (saleItems.length === 0) return "در حال حاضر تخفیفی نداریم.";
+    return saleItems.slice(0, 5).map((p) =>
+      `🔥 **${p.namePersian}** ${p.discount}% تخفیف! ${(p.price * (1 - (p.discount || 0) / 100)).toLocaleString("fa-IR")} تومان\n/products/${p.id}`
+    ).join("\n\n") + `\n\n${saleItems.length > 5 ? `و ${saleItems.length - 5} محصول دیگر` : ""}`;
+  }
+
+  if (/جدید|new/i.test(query)) {
+    const newItems = products.filter((s) => s.new);
+    if (newItems.length === 0) return "در حال حاضر محصول جدیدی نداریم.";
+    return newItems.slice(0, 5).map((p) =>
+      `🆕 **${p.namePersian}** - ${p.price.toLocaleString("fa-IR")} تومان\n/products/${p.id}`
+    ).join("\n\n");
   }
 
   if (/برند|brand/i.test(query)) {
     const brands = [...new Set(products.map((s) => s.brand))];
-    return `برندهای موجود در فروشگاه:\n${brands.slice(0, 20).join("، ")}${brands.length > 20 ? " و..." : ""}`;
+    return `برندها: ${brands.slice(0, 25).join("، ")}${brands.length > 25 ? " و..." : ""}`;
   }
 
   const catMap: Record<string, string[]> = {
@@ -212,10 +286,13 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
     if (query.includes(kw)) {
       const cat = cats[0];
       const catName = products.find((s) => s.category === cat)?.categoryPersian || cat;
-      const count = products.filter((s) => s.category === cat).length;
-      return `دسته ${catName} شامل ${count} محصول است. برای مشاهده، روی دسته ${catName} در صفحه اصلی کلیک کنید.`;
+      const items = products.filter((s) => s.category === cat).slice(0, 4);
+      if (items.length === 0) return `دسته ${catName} محصولی ندارد.`;
+      return `محصولات ${catName}:\n` + items.map((p) =>
+        `- **${p.namePersian}** ${p.price.toLocaleString("fa-IR")} تومان\n  /products/${p.id}`
+      ).join("\n");
     }
   }
 
-  return "سوال شما رو متوجه نشدم. می‌توانم درباره محصولات، برندها، قیمت‌ها، ارسال، بازگشت کالا و ساعت کاری به شما اطلاعات بدم. لطفاً سوالتون رو واضح‌تر بپرسید 🙏";
+  return "سوال شما رو متوجه نشدم. می‌توانم درباره محصولات، برندها، قیمت‌ها، تخفیف‌ها، ارسال و بازگشت کالا به شما اطلاعات بدم. 🙏";
 }

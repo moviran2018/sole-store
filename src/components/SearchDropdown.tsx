@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { shoes as staticShoes } from "@/data/shoes";
-import { categories } from "@/data/shoes";
+import { shoes as staticShoes, categories } from "@/data/shoes";
+import { getAllShoes } from "@/lib/shoe-store";
 import type { Shoe } from "@/types/shoe";
 
 interface Props {
@@ -11,20 +11,22 @@ interface Props {
   onChange: (v: string) => void;
   onSelect?: () => void;
   placeholder?: string;
-  products?: Shoe[];
 }
 
-export default function SearchDropdown({ value, onChange, onSelect, placeholder, products }: Props) {
-  const shoes = products || staticShoes;
+export default function SearchDropdown({ value, onChange, onSelect, placeholder }: Props) {
+  const [allShoes, setAllShoes] = useState<Shoe[]>(staticShoes);
   const [open, setOpen] = useState(false);
   const [highlightIdx, setHighlightIdx] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Load merged data on mount (includes custom + supabase products)
+  useEffect(() => { getAllShoes().then(setAllShoes); }, []);
+
   const q = value.toLowerCase().trim();
 
   const matchedProducts = q
-    ? shoes
+    ? allShoes
         .filter(
           (s) =>
             s.name.toLowerCase().includes(q) ||
@@ -107,7 +109,6 @@ export default function SearchDropdown({ value, onChange, onSelect, placeholder,
       {showDropdown && (
         <div className="absolute top-full right-0 left-0 mt-1.5 bg-[#1a1a1a] border border-[var(--border)] rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden max-h-96 overflow-y-auto">
           <div className="p-2">
-            {/* Category matches */}
             {matchedCategories.length > 0 && (
               <div>
                 <div className="px-2 py-1.5 text-[10px] text-gray-600 uppercase tracking-wider font-medium">
@@ -130,7 +131,6 @@ export default function SearchDropdown({ value, onChange, onSelect, placeholder,
               </div>
             )}
 
-            {/* Product matches */}
             {matchedProducts.length > 0 && (
               <div className={matchedCategories.length > 0 ? "mt-1 border-t border-[var(--border)] pt-1" : ""}>
                 <div className="px-2 py-1.5 text-[10px] text-gray-600 uppercase tracking-wider font-medium">
@@ -171,7 +171,6 @@ export default function SearchDropdown({ value, onChange, onSelect, placeholder,
             )}
           </div>
 
-          {/* Footer */}
           <div className="px-3 py-2 border-t border-[var(--border)] text-center">
             <Link
               href={`/?q=${encodeURIComponent(value)}#products`}
