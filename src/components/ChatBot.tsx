@@ -208,13 +208,28 @@ export default function ChatBot({ products }: Props) {
   );
 }
 
-/** Convert markdown-style links `/products/xxx` to clickable <a> tags */
+/** Convert markdown-style links `/products/xxx` and media URLs to clickable elements */
 function renderMessage(text: string): React.ReactNode {
-  const parts = text.split(/(\/products\/[\w-]+)/g);
+  const parts = text.split(/(\/products\/[\w-]+|https?:\/\/[^\s)]+)/g);
   return parts.map((part, i) => {
-    const match = part.match(/^\/products\/([\w-]+)$/);
-    if (match) {
+    const prodMatch = part.match(/^\/products\/([\w-]+)$/);
+    if (prodMatch) {
       return <Link key={i} href={part} className="text-orange-400 hover:text-orange-300 underline text-xs">🔗 مشاهده محصول</Link>;
+    }
+    const urlMatch = part.match(/^(https?:\/\/[^\s)]+)$/);
+    if (urlMatch) {
+      const url = urlMatch[1];
+      const ext = url.split("?")[0].toLowerCase();
+      if (/\.(png|jpe?g|gif|svg|webp|bmp)$/i.test(ext)) {
+        return <img key={i} src={url} alt="" className="max-w-full h-auto rounded-lg my-1" loading="lazy" />;
+      }
+      if (/\.(mp3|wav|ogg|aac|m4a|flac)$/i.test(ext)) {
+        return <audio key={i} controls className="w-full my-1" src={url} />;
+      }
+      if (/\.(mp4|webm|mov|avi|mkv)$/i.test(ext)) {
+        return <video key={i} controls className="max-w-full h-auto rounded-lg my-1" src={url} />;
+      }
+      return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs">{url}</a>;
     }
     return <span key={i}>{part}</span>;
   });
@@ -227,7 +242,15 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
   for (const entry of knowledge) {
     const tags = entry.tags.map((t) => t.toLowerCase());
     const match = tags.some((t) => query.includes(t)) || query.includes(entry.title.toLowerCase());
-    if (match) return entry.content;
+    if (match) {
+      let reply = entry.content;
+      if (entry.media) {
+        if (entry.media.imageLinks.length) reply += "\n\n" + entry.media.imageLinks.join("\n");
+        if (entry.media.audioLinks.length) reply += "\n\n" + entry.media.audioLinks.join("\n");
+        if (entry.media.videoLinks.length) reply += "\n\n" + entry.media.videoLinks.join("\n");
+      }
+      return reply;
+    }
   }
 
   if (/سلام|درود|خوبی|hello|hi/i.test(query)) {

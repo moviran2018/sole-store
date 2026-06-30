@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getKnowledgeBase, addKnowledge, deleteKnowledge, type KnowledgeEntry } from "@/lib/knowledge";
+import { getKnowledgeBase, addKnowledge, deleteKnowledge, type KnowledgeEntry, type KnowledgeMedia } from "@/lib/knowledge";
 
 const entryTypes = [
   { id: "faq", label: "سوالات متداول" },
@@ -15,20 +15,35 @@ export default function KnowledgePage() {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<KnowledgeEntry | null>(null);
-  const [form, setForm] = useState({ title: "", content: "", type: "faq", tags: "" });
+  const [form, setForm] = useState({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "" });
 
   useEffect(() => { getKnowledgeBase().then(setEntries); }, []);
 
-  const resetForm = () => setForm({ title: "", content: "", type: "faq", tags: "" });
+  const resetForm = () => setForm({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "" });
 
   const handleEdit = (e: KnowledgeEntry) => {
     setEditing(e);
-    setForm({ title: e.title, content: e.content, type: e.type, tags: e.tags.join(", ") });
+    setForm({
+      title: e.title, content: e.content, type: e.type, tags: e.tags.join(", "),
+      imageLinks: e.media?.imageLinks?.join("\n") || "",
+      audioLinks: e.media?.audioLinks?.join("\n") || "",
+      videoLinks: e.media?.videoLinks?.join("\n") || "",
+    });
     setShowForm(true);
   };
 
+  const parseLinks = (text: string): string[] => text.split("\n").map((l) => l.trim()).filter((l) => l.startsWith("http"));
+
   const handleSave = async () => {
     if (!form.title || !form.content) return alert("عنوان و متن را وارد کنید");
+
+    const imageLinks = parseLinks(form.imageLinks);
+    const audioLinks = parseLinks(form.audioLinks);
+    const videoLinks = parseLinks(form.videoLinks);
+    const media: KnowledgeMedia | undefined = (imageLinks.length || audioLinks.length || videoLinks.length)
+      ? { imageLinks, audioLinks, videoLinks }
+      : undefined;
+
     const entry: KnowledgeEntry = {
       id: editing?.id || `k-${Date.now().toString(36)}`,
       title: form.title,
@@ -36,6 +51,7 @@ export default function KnowledgePage() {
       type: form.type as KnowledgeEntry["type"],
       tags: form.tags.split(/[,\s]+/).filter(Boolean),
       createdAt: editing?.createdAt || new Date().toISOString(),
+      media,
     };
     await addKnowledge(entry);
     setEditing(null);
@@ -91,6 +107,26 @@ export default function KnowledgePage() {
             <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} dir="rtl"
               className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-orange-500/50" />
           </div>
+
+          {/* Media Links */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-gray-800/50">
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">لینک تصاویر (هر لینک یک خط)</label>
+              <textarea value={form.imageLinks} onChange={(e) => setForm({ ...form, imageLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://example.com/image1.jpg"
+                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">لینک صدا (هر لینک یک خط)</label>
+              <textarea value={form.audioLinks} onChange={(e) => setForm({ ...form, audioLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://example.com/audio.mp3"
+                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 block mb-1">لینک ویدیو (هر لینک یک خط)</label>
+              <textarea value={form.videoLinks} onChange={(e) => setForm({ ...form, videoLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://example.com/video.mp4"
+                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+            </div>
+          </div>
+
           <div className="flex items-center gap-3">
             <button onClick={handleSave} className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-all">ذخیره</button>
             <button onClick={() => { setShowForm(false); setEditing(null); resetForm(); }} className="text-gray-400 hover:text-white px-4 py-2.5 rounded-xl border border-gray-800 text-sm transition-all">انصراف</button>
@@ -113,6 +149,13 @@ export default function KnowledgePage() {
                 {e.tags.length > 0 && (
                   <div className="flex gap-1 mt-1.5 flex-wrap">
                     {e.tags.map((t) => <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-500">{t}</span>)}
+                  </div>
+                )}
+                {e.media && (e.media.imageLinks.length > 0 || e.media.audioLinks.length > 0 || e.media.videoLinks.length > 0) && (
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {e.media.imageLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-900/30 text-blue-400">🖼 {e.media.imageLinks.length} تصویر</span>}
+                    {e.media.audioLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-900/30 text-green-400">🎵 {e.media.audioLinks.length} صدا</span>}
+                    {e.media.videoLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-900/30 text-red-400">🎬 {e.media.videoLinks.length} ویدیو</span>}
                   </div>
                 )}
               </div>

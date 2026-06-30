@@ -1,5 +1,11 @@
 "use client";
 
+export interface KnowledgeMedia {
+  imageLinks: string[];
+  audioLinks: string[];
+  videoLinks: string[];
+}
+
 export interface KnowledgeEntry {
   id: string;
   title: string;
@@ -7,6 +13,7 @@ export interface KnowledgeEntry {
   type: "faq" | "policy" | "product_info" | "shipping" | "custom";
   tags: string[];
   createdAt: string;
+  media?: KnowledgeMedia;
 }
 
 const KNOWLEDGE_KEY = "sole_knowledge_base";
@@ -35,10 +42,15 @@ export async function getKnowledgeBase(): Promise<KnowledgeEntry[]> {
           const merged = new Map<string, KnowledgeEntry>();
           for (const e of local) merged.set(e.id, e);
           for (const d of data) {
+            let media: KnowledgeMedia | undefined;
+            if (d.media) {
+              try { media = typeof d.media === "string" ? JSON.parse(d.media) : d.media; } catch { }
+            }
             merged.set(d.id, {
               id: d.id, title: d.title, content: d.content,
               type: d.type || "custom", tags: d.tags || [],
               createdAt: d.created_at || d.createdAt,
+              media,
             });
           }
           return Array.from(merged.values());
@@ -62,6 +74,7 @@ export async function addKnowledge(entry: KnowledgeEntry): Promise<void> {
       await (supabase.from(KNOWLEDGE_TABLE) as any).upsert([{
         id: entry.id, title: entry.title, content: entry.content,
         type: entry.type, tags: entry.tags, created_at: entry.createdAt,
+        media: entry.media ? JSON.stringify(entry.media) : null,
       }], { onConflict: "id" });
     } catch { }
   }
@@ -76,6 +89,14 @@ export async function deleteKnowledge(id: string): Promise<void> {
 
 export function buildKnowledgePrompt(entries: KnowledgeEntry[]): string {
   if (entries.length === 0) return "";
-  const sections = entries.map((e) => `[${e.type}] ${e.title}\n${e.content}`).join("\n\n");
+  const sections = entries.map((e) => {
+    let text = `[${e.type}] ${e.title}\n${e.content}`;
+    if (e.media) {
+      if (e.media.imageLinks.length) text += `\nImages: ${e.media.imageLinks.join(", ")}`;
+      if (e.media.audioLinks.length) text += `\nAudio: ${e.media.audioLinks.join(", ")}`;
+      if (e.media.videoLinks.length) text += `\nVideos: ${e.media.videoLinks.join(", ")}`;
+    }
+    return text;
+  }).join("\n\n");
   return `Here is the store's knowledge base. Use it to answer customer questions accurately:\n\n${sections}`;
 }
