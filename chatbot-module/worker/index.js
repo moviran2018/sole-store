@@ -2,6 +2,23 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
+const PRODUCTS_URL = "https://moviran2018.github.io/sole-store/data/products.json";
+let cachedProducts = null;
+let cacheTime = 0;
+
+async function getProducts() {
+  if (cachedProducts && Date.now() - cacheTime < 300000) return cachedProducts;
+  try {
+    const res = await fetch(PRODUCTS_URL);
+    const data = await res.json();
+    cachedProducts = JSON.stringify(data.products || []);
+    cacheTime = Date.now();
+  } catch (e) {
+    if (!cachedProducts) cachedProducts = "";
+  }
+  return cachedProducts;
+}
+
 async function handleRequest(request) {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders() });
@@ -31,18 +48,22 @@ function json(data, status = 200) {
 
 async function handleChat(request) {
   try {
-    const { message, history, provider, knowledge } = await request.json();
+    const { message, history, provider } = await request.json();
     if (!message?.trim()) return json({ error: "message is required" }, 400);
 
     const p = (provider || "groq").toUpperCase();
     const apiKey = p === "GROQ" ? AI_API_KEY_GROQ : p === "OPENAI" ? AI_API_KEY_OPENAI : AI_API_KEY_CLAUDE;
     if (!apiKey) return json({ error: `API key for ${p} not configured` }, 500);
 
+    const productsStr = await getProducts();
     const systemPrompt = (typeof SYSTEM_PROMPT !== "undefined" ? SYSTEM_PROMPT :
-      "You are SoleBot, a Persian AI assistant for Sole Store. Answer ONLY about Sole Store products. "
+      "You are SoleBot, a Persian AI assistant for Sole Store, an online shoe store. " +
+      "Answer ONLY about Sole Store products using the product data below. " +
+      "Be helpful, concise, and friendly in Persian. If asked about something not in the data, say you don't have that information."
     );
-    const kb = knowledge || "";
-    const sys = kb ? systemPrompt + "\n\n## STORE DATA\n" + kb : systemPrompt;
+    const sys = productsStr
+      ? systemPrompt + "\n\n## PRODUCTS DATA\n" + productsStr
+      : systemPrompt;
 
     const messages = [{ role: "system", content: sys }, ...(history || []), { role: "user", content: message }];
     let reply;
