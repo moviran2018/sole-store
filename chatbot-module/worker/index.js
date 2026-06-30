@@ -2,21 +2,7 @@ addEventListener("fetch", (event) => {
   event.respondWith(handleRequest(event.request));
 });
 
-const PRODUCTS_URL = "https://moviran2018.github.io/sole-store/data/products.json";
-let cache = { products: null, knowledge: null, time: 0 };
-
-async function getProducts() {
-  if (cache.products && Date.now() - cache.time < 300000) return cache.products;
-  try {
-    const res = await fetch(PRODUCTS_URL);
-    const data = await res.json();
-    cache.products = JSON.stringify(data.products || []);
-    cache.time = Date.now();
-  } catch (e) {
-    if (!cache.products) cache.products = "";
-  }
-  return cache.products;
-}
+let cache = { knowledge: null, time: 0 };
 
 async function getKnowledge(url) {
   if (!url) return null;
@@ -69,28 +55,26 @@ async function handleChat(request) {
     const apiKey = p === "GROQ" ? AI_API_KEY_GROQ : p === "OPENAI" ? AI_API_KEY_OPENAI : AI_API_KEY_CLAUDE;
     if (!apiKey) return json({ error: `API key for ${p} not configured` }, 500);
 
-    const [productsStr, docContent] = await Promise.all([
-      getProducts(),
-      getKnowledge(knowledgeUrl || (typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null)),
-    ]);
+    const docContent = await getKnowledge(
+      knowledgeUrl || (typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null)
+    );
 
     let sys = "You are SoleBot, a Persian AI assistant for Sole Store (online shoe store). " +
       "Answer concisely in Persian using ONLY the provided data. " +
       "If the answer is not in the data, say exactly: 'اطلاعاتی در این مورد ندارم.' " +
       "DO NOT repeat yourself. DO NOT make up information.";
 
-    if (docContent) sys += "\n\n## STORE INFO (Google Doc)\n" + docContent.slice(0, 8000);
-    if (productsStr) sys += "\n\n## PRODUCTS\n" + productsStr;
+    if (docContent) sys += "\n\n## STORE INFO\n" + docContent.slice(0, 3000);
 
     const his = (history || []).slice(-10);
     const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
     let reply;
 
     const body = {
-      model: "llama-3.3-70b-versatile",
+      model: "llama3-8b-8192",
       messages,
       temperature: 0.5,
-      max_tokens: 600,
+      max_tokens: 400,
       frequency_penalty: 0.3,
       presence_penalty: 0.2,
     };
