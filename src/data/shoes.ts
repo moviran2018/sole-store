@@ -49,7 +49,34 @@ function pickColors(seed: number): { name: string; hex: string }[] {
   return available.slice(0, count);
 }
 
-const img = (id: string) => `https://picsum.photos/seed/${id}/600/600`;
+const catColors: Record<string, [string, string, string]> = {
+  sneakers: ["#1a1a2e", "#ff6b00", "👟"],
+  formal: ["#1a1a1a", "#8B4513", "👞"],
+  running: ["#0d1b2a", "#00b894", "🏃"],
+  casual: ["#1b0a2e", "#6c5ce7", "🥿"],
+  boots: ["#1a0f0a", "#A0522D", "👢"],
+  sandals: ["#1a1a0a", "#fdcb6e", "🩴"],
+  loafers: ["#1a0a0a", "#e17055", "👞"],
+  slides: ["#0a1a1a", "#00cec9", "🩴"],
+  heels: ["#1a0a14", "#fd79a8", "👠"],
+  sport: ["#0a0a1a", "#0984e3", "⚽"],
+};
+function shoeSvg(cat: string, name: string, v: number): string {
+  const [bg, accent, emoji] = catColors[cat] || catColors.sneakers;
+  const n = name.replace(/[&<>"']/g, "_");
+  const emojiSize = v === 3 ? 140 : v === 2 ? 110 : 90;
+  const yOffset = v === 0 ? -10 : v === 1 ? 10 : 0;
+  const s = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">` +
+    `<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">` +
+    `<stop offset="0%" stop-color="${bg}"/><stop offset="100%" stop-color="#000"/>` +
+    `</linearGradient></defs>` +
+    `<rect width="600" height="600" fill="url(#g)"/>` +
+    `<circle cx="300" cy="${240 + yOffset}" r="100" fill="${accent}" opacity=".08"/>` +
+    `<text x="300" y="${270 + yOffset}" text-anchor="middle" font-size="${emojiSize}" dominant-baseline="central">${emoji}</text>` +
+    `<text x="300" y="${390 + yOffset}" text-anchor="middle" font-size="24" fill="${accent}" font-family="sans-serif" font-weight="bold">${n}</text>` +
+    `<rect x="100" y="${420 + yOffset}" width="400" height="2" rx="1" fill="${accent}" opacity=".3"/></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`;
+}
 
 const sneakers = [
   { id: "snk-001", name: "Air Max Pulse", namePersian: "ایر مکس پالس", brand: "Nike", featured: true },
@@ -237,8 +264,8 @@ export const shoes: Shoe[] = rawShoes.map((s, i) => ({
   categoryPersian: s.categoryPersian,
   sizes: pickSizes(i + 1),
   colors: pickColors(i + 3),
-  image: img(s.id),
-  images: [img(s.id + "-a"), img(s.id + "-b"), img(s.id + "-c")],
+  image: shoeSvg(s.category, s.namePersian, 0),
+  images: [shoeSvg(s.category, s.namePersian, 1), shoeSvg(s.category, s.namePersian, 2), shoeSvg(s.category, s.namePersian, 3)],
   brand: s.brand,
   rating: +(3.5 + rng(i + 5) * 1.5).toFixed(1),
   inStock: true,
