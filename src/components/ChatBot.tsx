@@ -483,15 +483,33 @@ function findRelevantSnippet(content: string, query: string): string {
 function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = []): string {
   const query = q.toLowerCase();
 
-  // 1) Greeting
-  if (/سلام|درود|خوبی|hello|hi/i.test(query)) {
+  // 1) Greeting — only when query is JUST a greeting, no product question
+  const isPureGreeting = /^(سلام|درود|خوبی|hello|hi)\s*[،,?!.]*\s*$/i.test(query.trim());
+  if (isPureGreeting) {
     return "سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمکتان کنم؟ 😊";
   }
 
-  // 2) Specific product search (by name or brand)
-  const matched = products.filter((p) =>
-    query.includes(p.namePersian.toLowerCase()) || query.includes(p.name.toLowerCase()) || query.includes(p.brand.toLowerCase())
-  ).slice(0, 3);
+  // 2) Specific product search (by name or brand, including Persian brand names)
+  const brandAliases: Record<string, string[]> = {
+    nike: ["نایک", "ナイキ"],
+    adidas: ["آدیداس"],
+    puma: ["پوما", "فوما"],
+    reebok: ["ریباک"],
+    "new balance": ["نیوبالانس", "نیو بالانس"],
+    asics: ["آسیکس", "اسیس"],
+    converse: ["کانورس"],
+    vans: ["ونس"],
+    underarmour: ["آندرآرمور", "آندر آرمور", "اندرآرمور"],
+  };
+  const queryLower = query.toLowerCase();
+  const matched = products.filter((p) => {
+    if (queryLower.includes(p.namePersian.toLowerCase())) return true;
+    if (queryLower.includes(p.name.toLowerCase())) return true;
+    if (queryLower.includes(p.brand.toLowerCase())) return true;
+    const aliases = brandAliases[p.brand.toLowerCase()];
+    if (aliases && aliases.some((a) => queryLower.includes(a))) return true;
+    return false;
+  }).slice(0, 3);
   if (matched.length > 0) {
     return matched.map((p) =>
       `**${p.namePersian}** (${p.brand}) - ${p.price.toLocaleString("fa-IR")} تومان\nبرای مشاهده: /products/${p.id}`
