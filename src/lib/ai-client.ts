@@ -11,21 +11,33 @@ export function getAiClient(): AiClient | null {
 
   return {
     async ask(system: string, messages: { role: "user" | "assistant"; content: string }[]): Promise<string> {
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: aiModel,
-          temperature: 0.3,
-          max_tokens: 1024,
-          messages: [
-            { role: "system", content: system },
-            ...messages,
-          ],
-        }),
-      });
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content || "پاسخی دریافت نشد.";
+      try {
+        const res = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: aiModel,
+            temperature: 0.3,
+            max_tokens: 2048,
+            messages: [
+              { role: "system", content: system },
+              ...messages,
+            ],
+          }),
+        });
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          console.error("AI API error:", res.status, errText);
+          return "";
+        }
+
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || "";
+      } catch (err) {
+        console.error("AI request failed:", err);
+        return "";
+      }
     },
   };
 }

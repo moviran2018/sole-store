@@ -50,46 +50,24 @@ function makeSystemPrompt(
   customPrompt: string,
   storeSummary: string,
 ): string {
-  const catList = [...new Set(products.map((s) => s.categoryPersian))].join(", ");
-  const brandList = [...new Set(products.map((s) => s.brand))].join(", ");
   const knowledge = buildKnowledgePrompt(knowledgeEntries);
 
-  if (customPrompt.trim()) {
-    return `${customPrompt.trim()}
-
-## STORE DATA (USE THIS FOR ACCURATE ANSWERS)
-${storeSummary}
-
-## KNOWLEDGE BASE
-${knowledge || "No additional entries."}
-
-## RULES
-- Persian language only.
+  const baseRules = `\n## RULES
+- Persian language only. Respond in Persian.
 - Always include /products/{id} links with product recommendations.
-- NEVER make up products or prices. Only use the STORE DATA above.
+- NEVER make up products or prices. Only use the STORE DATA below.
 - If the question is outside store scope, say: "من فقط درباره محصولات و خدمات Sole میتونم کمک کنم."`;
+
+  const storeSection = `\n## STORE DATA (ALL PRODUCTS)\n${storeSummary}`;
+  const kbSection = `\n## KNOWLEDGE BASE\n${knowledge || "No additional entries."}`;
+
+  if (customPrompt.trim()) {
+    return `${customPrompt.trim()}${storeSection}${kbSection}${baseRules}`;
   }
 
-  return `You are SoleBot, a Persian AI assistant for Sole Store shoe shop.
+  return `You are SoleBot, a Persian AI assistant for Sole Store. Answer ONLY about Sole Store products.
 
-## YOUR JOB
-Answer customer questions ONLY about Sole Store products, policies, and services. Be friendly, concise, and helpful. Always use Persian (fa-IR).
-
-## STORE DATA (USE THIS FOR ACCURATE ANSWERS)
-${storeSummary}
-
-## KNOWLEDGE BASE
-${knowledge || "No additional entries."}
-
-## RULES
-- Persian language only.
-- Always include /products/{id} links with product recommendations.
-- NEVER make up products or prices. Only use the STORE DATA above.
-- Free shipping over 2,000,000 Toman, delivery 3-5 days.
-- 7-day return policy.
-- Payment: online via Zarinpal.
-- If the customer asks about profanity, respond: "❌ لطفاً محترمانه سوال خود را مطرح کنید."
-- If the question is outside store scope, respond: "من فقط درباره محصولات و خدمات Sole میتونم کمک کنم."`;
+${storeSection}${kbSection}${baseRules}`;
 }
 
 interface Props {
@@ -255,18 +233,28 @@ export default function ChatBot({ products }: Props) {
           .filter((m) => m.role === "user" || m.role === "bot")
           .slice(-20)
           .map((m) => ({ role: m.role === "user" ? "user" as const : "assistant" as const, content: m.text }));
+
         const reply = await ai.ask(sysPrompt, chatMessages);
-        setMessages((prev) => [...prev, { role: "bot", text: reply }]);
+
+        if (reply) {
+          setMessages((prev) => [...prev, { role: "bot", text: reply }]);
+        } else {
+          setMessages((prev) => [...prev, { role: "bot", text: botReply(text, allProducts, knowledge) }]);
+        }
       } catch {
-        setMessages((prev) => [...prev, { role: "bot", text: "متأسفانه خطایی رخ داد. لطفاً دوباره تلاش کنید." }]);
+        setMessages((prev) => [...prev, { role: "bot", text: botReply(text, allProducts, knowledge) }]);
       } finally {
         setLoading(false);
       }
     } else {
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: botReply(text, allProducts, knowledge) }]);
+      try {
+        const reply = botReply(text, allProducts, knowledge);
+        setMessages((prev) => [...prev, { role: "bot", text: reply }]);
+      } catch {
+        setMessages((prev) => [...prev, { role: "bot", text: "متأسفانه خطایی در پردازش سوال رخ داد. لطفاً دوباره تلاش کنید." }]);
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     }
   }, [loading, ai, sysPrompt, allProducts, knowledge]);
 
