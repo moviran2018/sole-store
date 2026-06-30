@@ -19,33 +19,68 @@ function lsSet(key: string, value: any) {
 }
 
 export async function getAllShoes(): Promise<Shoe[]> {
-  if (isSupabaseConfigured()) {
-    const s = getSupabase();
-    if (s) {
-      const { data } = await (s.from("products") as any).select("*").order("created_at");
-      if (data && data.length > 0) return data.map(mapShoe);
-    }
-  }
   const removed = new Set(lsGet<string[]>(ADMIN_REMOVED_KEY, []));
   const custom = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []);
-  return [...staticShoes.filter((s) => !removed.has(s.id)), ...custom];
+
+  // Build merged map: static → custom → supabase (latter overrides former)
+  const merged = new Map<string, Shoe>();
+
+  // 1. All static shoes (minus removed)
+  for (const s of staticShoes) {
+    if (!removed.has(s.id)) merged.set(s.id, s);
+  }
+
+  // 2. Custom products from localStorage
+  for (const s of custom) {
+    merged.set(s.id, s);
+  }
+
+  // 3. Supabase products (if configured)
+  if (isSupabaseConfigured()) {
+    const supabase = getSupabase();
+    if (supabase) {
+      const { data } = await (supabase.from("products") as any).select("*");
+      if (data) {
+        for (const d of data) {
+          merged.set(d.id, mapShoe(d));
+        }
+      }
+    }
+  }
+
+  return Array.from(merged.values());
 }
 
 export async function getShoeById(id: string): Promise<Shoe | undefined> {
+  // 1. Check Supabase first (most authoritative)
   if (isSupabaseConfigured()) {
-    const s = getSupabase();
-    if (s) {
-      const { data } = await (s.from("products") as any).select("*").eq("id", id).single();
+    const supabase = getSupabase();
+    if (supabase) {
+      const { data } = await (supabase.from("products") as any).select("*").eq("id", id).single();
       if (data) return mapShoe(data);
     }
   }
+
+  // 2. Check custom products
   const custom = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []);
-  return custom.find((s) => s.id === id) || staticShoes.find((s) => s.id === id);
+  const found = custom.find((s) => s.id === id);
+  if (found) return found;
+
+  // 3. Check static data
+  const removed = new Set(lsGet<string[]>(ADMIN_REMOVED_KEY, []));
+  if (!removed.has(id)) return staticShoes.find((s) => s.id === id);
 }
 
 export async function addShoe(shoe: Shoe): Promise<void> {
+  // Save to localStorage (always)
+  const products = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []);
+  const idx = products.findIndex((p) => p.id === shoe.id);
+  idx !== -1 ? products[idx] = shoe : products.push(shoe);
+  lsSet(ADMIN_PRODUCTS_KEY, products);
+
+  // Save to Supabase (if configured)
   if (isSupabaseConfigured()) {
-    const s = getSupabase()!;
+    const supabase = getSupabase()!;
     const dbRow = {
       id: shoe.id, name: shoe.name, name_persian: shoe.namePersian,
       description: shoe.description, description_persian: shoe.descriptionPersian,
@@ -56,25 +91,22 @@ export async function addShoe(shoe: Shoe): Promise<void> {
       featured: shoe.featured || false, new: shoe.new || false,
       sale: shoe.sale || false, discount: shoe.discount || 0,
     };
-    const { error } = await (s.from("products") as any).upsert([dbRow], { onConflict: "id" });
+    const { error } = await (supabase.from("products") as any).upsert([dbRow], { onConflict: "id" });
     if (error) console.error("Supabase error:", error);
-    return;
   }
-  const products = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []);
-  const idx = products.findIndex((p) => p.id === shoe.id);
-  idx !== -1 ? products[idx] = shoe : products.push(shoe);
-  lsSet(ADMIN_PRODUCTS_KEY, products);
 }
 
 export async function deleteShoe(id: string): Promise<void> {
-  if (isSupabaseConfigured()) {
-    await (getSupabase()!.from("products") as any).delete().eq("id", id);
-    return;
-  }
+  // Remove from localStorage
   const removed = lsGet<string[]>(ADMIN_REMOVED_KEY, []);
-  removed.push(id);
+  if (!removed.includes(id)) removed.push(id);
   lsSet(ADMIN_REMOVED_KEY, removed);
   lsSet(ADMIN_PRODUCTS_KEY, lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []).filter((p) => p.id !== id));
+
+  // Remove from Supabase (if configured)
+  if (isSupabaseConfigured()) {
+    await (getSupabase()!.from("products") as any).delete().eq("id", id);
+  }
 }
 
 export async function getOrders(): Promise<any[]> {
@@ -88,7 +120,6 @@ export async function getOrders(): Promise<any[]> {
 export async function saveOrder(order: any): Promise<void> {
   if (isSupabaseConfigured()) {
     await (getSupabase()!.from("orders") as any).upsert([{ ...order, items: JSON.stringify(order.items) }], { onConflict: "id" });
-    return;
   }
   const orders = lsGet<any[]>(ADMIN_ORDERS_KEY, []);
   const idx = orders.findIndex((o: any) => o.id === order.id);
@@ -99,7 +130,6 @@ export async function saveOrder(order: any): Promise<void> {
 export async function updateOrderStatus(id: string, status: string): Promise<void> {
   if (isSupabaseConfigured()) {
     await (getSupabase()!.from("orders") as any).update({ status }).eq("id", id);
-    return;
   }
   const orders = lsGet<any[]>(ADMIN_ORDERS_KEY, []);
   const idx = orders.findIndex((o: any) => o.id === id);
@@ -117,7 +147,6 @@ export async function getMessages(): Promise<any[]> {
 export async function saveMessage(msg: any): Promise<void> {
   if (isSupabaseConfigured()) {
     await (getSupabase()!.from("messages") as any).insert([{ name: msg.name, email: msg.email, subject: msg.subject, message: msg.message }]);
-    return;
   }
   const messages = lsGet<any[]>(ADMIN_MESSAGES_KEY, []);
   messages.unshift(msg);
