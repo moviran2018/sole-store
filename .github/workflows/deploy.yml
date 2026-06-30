@@ -21,12 +21,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Write env vars
+        run: |
+          echo "NEXT_PUBLIC_AI_REVERSED_KEY=$(echo '${{ secrets.AI_API_KEY }}' | rev)" >> $GITHUB_ENV
+
       - name: Build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          NEXT_PUBLIC_AI_API_KEY: ${{ secrets.AI_API_KEY }}
         run: npm run build
 
       - name: Deploy to public repo

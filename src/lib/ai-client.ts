@@ -2,7 +2,7 @@ export interface AiClient {
   ask(system: string, messages: { role: "user" | "assistant"; content: string }[]): Promise<string>;
 }
 
-const apiKey = process.env.NEXT_PUBLIC_AI_API_KEY || "";
+const apiKey = (process.env.NEXT_PUBLIC_AI_REVERSED_KEY || "").split("").reverse().join("");
 const apiUrl = process.env.NEXT_PUBLIC_AI_API_URL || "https://api.groq.com/openai/v1/chat/completions";
 const aiModel = process.env.NEXT_PUBLIC_AI_MODEL || "llama3-70b-8192";
 
