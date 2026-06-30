@@ -433,7 +433,13 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
 
   for (const entry of knowledge) {
     const tags = entry.tags.map((t) => t.toLowerCase());
-    const match = tags.some((t) => query.includes(t)) || query.includes(entry.title.toLowerCase());
+    const contentLower = entry.content.toLowerCase();
+    const titleLower = entry.title.toLowerCase();
+    const queryWords = query.split(/\s+/).filter((w) => w.length >= 4);
+    const match = tags.some((t) => query.includes(t))
+      || query.includes(titleLower)
+      || contentLower.includes(query)
+      || queryWords.some((w) => contentLower.includes(w));
     if (match) {
       let reply = entry.content;
       if (entry.media) {
