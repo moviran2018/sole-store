@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileNav from "@/components/MobileNav";
 import ClientWrapper from "@/components/ClientWrapper";
+import ApiKeyDebug from "@/components/ApiKeyDebug";
 import { CartProvider } from "@/lib/cart-context";
 
 const vazirmatn = Vazirmatn({
@@ -31,6 +32,7 @@ export default function RootLayout({
           <Footer />
           <MobileNav />
           <ClientWrapper />
+          <ApiKeyDebug />
         </CartProvider>
       </body>
     </html>
