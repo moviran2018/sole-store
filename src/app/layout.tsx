@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileNav from "@/components/MobileNav";
-import ClientWrapper from "@/components/ClientWrapper";
-import ApiKeyDebug from "@/components/ApiKeyDebug";
 import { CartProvider } from "@/lib/cart-context";
 
 const vazirmatn = Vazirmatn({
@@ -31,8 +30,15 @@ export default function RootLayout({
           <main className="flex-1 pb-16 sm:pb-0">{children}</main>
           <Footer />
           <MobileNav />
-          <ClientWrapper />
-          <ApiKeyDebug />
+          <Script
+            src="/chatbot-widget.js"
+            strategy="lazyOnload"
+            data-worker="https://sole-chatbot.moviran2018.workers.dev"
+            data-site="sole-store"
+            data-provider="groq"
+            data-title="SoleBot"
+            data-welcome="سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمک کنم؟"
+          />
         </CartProvider>
       </body>
     </html>
