@@ -33,7 +33,7 @@ export default function RootLayout({
             src="/sole-store/chatbot-widget.js"
             data-worker="https://sole-chatbot.moviran2018.workers.dev"
             data-site="sole-store"
-            data-provider="groq"
+            data-provider="gemini"
             data-title="SoleBot"
             data-welcome="سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمک کنم؟"
             data-knowledge="/sole-store/data/products.json"

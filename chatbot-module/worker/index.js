@@ -79,8 +79,8 @@ async function handleChat(request) {
     const { message, history, provider, knowledgeUrl } = await request.json();
     if (!message?.trim()) return json({ error: "message is required" }, 400);
 
-    const p = (provider || "groq").toUpperCase();
-    const apiKey = p === "GROQ" ? AI_API_KEY_GROQ : p === "OPENAI" ? AI_API_KEY_OPENAI : AI_API_KEY_CLAUDE;
+    const p = (provider || "gemini").toUpperCase();
+    const apiKey = p === "GEMINI" ? GEMINI_API_KEY : p === "GROQ" ? AI_API_KEY_GROQ : p === "OPENAI" ? AI_API_KEY_OPENAI : AI_API_KEY_CLAUDE;
     if (!apiKey) return json({ error: `API key for ${p} not configured` }, 500);
 
     const docContent = await getKnowledge(
@@ -107,7 +107,19 @@ async function handleChat(request) {
       presence_penalty: 0.2,
     };
 
-    if (p === "GROQ") {
+    if (p === "GEMINI") {
+      const geminiContents = [];
+      if (sys) geminiContents.push({ role: "user", parts: [{ text: sys }] });
+      for (const m of his) geminiContents.push({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] });
+      geminiContents.push({ role: "user", parts: [{ text: message }] });
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: geminiContents, systemInstruction: { parts: [{ text: sys }] }, generationConfig: { temperature: 0.5, maxOutputTokens: 400 } }),
+      });
+      if (!res.ok) throw new Error(`Gemini error (${res.status}): ${await res.text().catch(() => "")}`);
+      reply = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || "";
+    } else if (p === "GROQ") {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },

@@ -5,7 +5,7 @@
   const WORKER_URL = SCRIPT?.getAttribute("data-worker") || "";
   const SITE_ID = SCRIPT?.getAttribute("data-site") || "";
   const LANG = SCRIPT?.getAttribute("data-lang") || "fa";
-  const PROVIDER = SCRIPT?.getAttribute("data-provider") || "groq";
+  const PROVIDER = SCRIPT?.getAttribute("data-provider") || "gemini";
   const TITLE = SCRIPT?.getAttribute("data-title") || "SoleBot";
   const WELCOME = SCRIPT?.getAttribute("data-welcome") || "سلام! چطور می‌توانم کمک کنم؟";
   const KNOWLEDGE_URL = SCRIPT?.getAttribute("data-knowledge-url") || "";
