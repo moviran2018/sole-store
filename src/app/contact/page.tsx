@@ -1,6 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import { saveMessage } from "@/lib/shoe-store";
+
 export default function ContactPage() {
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [sent, setSent] = useState(false);
+
+  const handleSubmit = () => {
+    if (!form.name || !form.email || !form.message) return alert("لطفاً تمام فیلدها را پر کنید");
+    saveMessage({ ...form, createdAt: new Date().toLocaleString("fa-IR") });
+    setSent(true);
+    setForm({ name: "", email: "", subject: "", message: "" });
+    setTimeout(() => setSent(false), 3000);
+  };
+
   return (
     <div className="pt-14 sm:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
@@ -12,22 +26,25 @@ export default function ContactPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 max-w-4xl mx-auto">
           <div>
-            <form className="space-y-4 sm:space-y-5">
-              {["نام و نام خانوادگی", "ایمیل", "موضوع"].map((label, i) => (
-                <div key={i}>
-                  <label className="block text-[11px] sm:text-xs font-medium text-gray-300 mb-1 sm:mb-1.5">{label}</label>
-                  <input type={i === 1 ? "email" : "text"}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm bg-[var(--muted)] border border-[var(--border)] focus:outline-none focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 rounded-xl"
-                    placeholder={label === "ایمیل" ? "ایمیل خود را وارد کنید" : label === "موضوع" ? "موضوع پیام" : "نام خود را وارد کنید"} />
+            <form className="space-y-4 sm:space-y-5" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              {[{ key: "name", label: "نام و نام خانوادگی", type: "text", placeholder: "نام خود را وارد کنید" },
+                { key: "email", label: "ایمیل", type: "email", placeholder: "ایمیل خود را وارد کنید" },
+                { key: "subject", label: "موضوع", type: "text", placeholder: "موضوع پیام" },
+              ].map((f) => (
+                <div key={f.key}>
+                  <label className="block text-[11px] sm:text-xs font-medium text-gray-300 mb-1 sm:mb-1.5">{f.label}</label>
+                  <input type={f.type} value={(form as any)[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm bg-[var(--muted)] border border-[var(--border)] focus:outline-none focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 rounded-xl" placeholder={f.placeholder} />
                 </div>
               ))}
               <div>
                 <label className="block text-[11px] sm:text-xs font-medium text-gray-300 mb-1 sm:mb-1.5">پیام</label>
-                <textarea rows={4} className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm bg-[var(--muted)] border border-[var(--border)] focus:outline-none focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 resize-none rounded-xl" placeholder="پیام خود را بنویسید..." />
+                <textarea rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm bg-[var(--muted)] border border-[var(--border)] focus:outline-none focus:border-[var(--accent)] transition-colors text-white placeholder-gray-500 resize-none rounded-xl" placeholder="پیام خود را بنویسید..." />
               </div>
-              <button type="button" onClick={() => alert("پیام شما با موفقیت ارسال شد.")}
-                className="w-full py-2.5 sm:py-3 btn-primary text-xs sm:text-sm font-semibold tracking-wider uppercase rounded-xl">
-                ارسال پیام
+              <button type="submit"
+                className={`w-full py-2.5 sm:py-3 text-xs sm:text-sm font-semibold tracking-wider uppercase rounded-xl transition-all ${sent ? "bg-green-600" : "btn-primary"}`}>
+                {sent ? "✓ ارسال شد" : "ارسال پیام"}
               </button>
             </form>
           </div>

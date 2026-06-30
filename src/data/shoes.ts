@@ -123,7 +123,7 @@ const shoePaths: Record<string, string> = {
   <path d="M330,110 L340,110 Q350,125 350,140 C350,155 340,170 330,180 L320,180 Q330,160 332,145 Q335,130 330,110 Z" fill="currentColor" opacity=".4"/>
   <line x1="130" y1="395" x2="380" y2="395" stroke="currentColor" stroke-width="3" opacity=".25"/>`,
 };
-function shoeSvg(cat: string, name: string, v: number, brand: string = ""): string {
+export function shoeSvg(cat: string, name: string, v: number, brand: string = ""): string {
   const t = catTheme[cat] || catTheme.sneakers;
   const n = name.replace(/[&<>"']/g, "_");
   const b = brand.replace(/[&<>"']/g, "_");
