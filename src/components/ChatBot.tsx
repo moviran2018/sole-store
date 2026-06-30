@@ -86,18 +86,29 @@ function useVoiceRecognition() {
   const transcriptRef = useRef("");
   const resultCbRef = useRef<((text: string) => void) | null>(null);
   const errorCbRef = useRef<(() => void) | null>(null);
+  const sentRef = useRef(false);
+  const stopRequestedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) setSupported(false);
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) setSupported(false);
+  }, []);
+
+  const sendTranscript = useCallback(() => {
+    if (sentRef.current) return;
+    sentRef.current = true;
+    setRecording(false);
+    const txt = transcriptRef.current.trim();
+    transcriptRef.current = "";
+    if (txt) resultCbRef.current?.(txt);
   }, []);
 
   const createRecognition = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return null;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return null;
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SR();
     recognition.lang = "fa-IR";
     recognition.continuous = false;
     recognition.interimResults = true;
@@ -112,50 +123,52 @@ function useVoiceRecognition() {
     };
 
     recognition.onerror = () => {
-      setRecording(false);
       holdingRef.current = false;
+      setRecording(false);
       errorCbRef.current?.();
     };
 
     recognition.onend = () => {
-      if (holdingRef.current) {
-        const newRec = createRecognition();
-        if (newRec) {
-          recognitionRef.current = newRec;
-          try { newRec.start(); } catch { }
+      if (holdingRef.current && !stopRequestedRef.current) {
+        const next = createRecognition();
+        if (next) {
+          recognitionRef.current = next;
+          try { next.start(); } catch { }
         }
       } else {
-        setRecording(false);
-        const txt = transcriptRef.current.trim();
-        transcriptRef.current = "";
-        if (txt) resultCbRef.current?.(txt);
+        sendTranscript();
       }
     };
 
     return recognition;
-  }, []);
+  }, [sendTranscript]);
 
   const startListening = useCallback((onResult: (text: string) => void, onError?: () => void) => {
     if (typeof window === "undefined") return;
     resultCbRef.current = onResult;
     errorCbRef.current = onError || null;
     transcriptRef.current = "";
+    sentRef.current = false;
+    stopRequestedRef.current = false;
     holdingRef.current = true;
 
-    const recognition = createRecognition();
-    if (!recognition) return;
-    recognitionRef.current = recognition;
+    const r = createRecognition();
+    if (!r) return;
+    recognitionRef.current = r;
     setRecording(true);
-    recognition.start();
+    r.start();
   }, [createRecognition]);
 
   const stopListening = useCallback(() => {
+    if (!holdingRef.current) return;
     holdingRef.current = false;
+    stopRequestedRef.current = true;
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch { }
       recognitionRef.current = null;
     }
-  }, []);
+    setTimeout(() => sendTranscript(), 800);
+  }, [sendTranscript]);
 
   return { recording, supported, startListening, stopListening };
 }
