@@ -109,16 +109,17 @@ async function handleChat(request) {
 
     if (p === "GEMINI") {
       const geminiContents = [];
-      if (sys) geminiContents.push({ role: "user", parts: [{ text: sys }] });
       for (const m of his) geminiContents.push({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] });
       geminiContents.push({ role: "user", parts: [{ text: message }] });
-      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey, {
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=" + apiKey, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: geminiContents, systemInstruction: { parts: [{ text: sys }] }, generationConfig: { temperature: 0.5, maxOutputTokens: 400 } }),
       });
       if (!res.ok) throw new Error(`Gemini error (${res.status}): ${await res.text().catch(() => "")}`);
-      reply = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const geminiResp = await res.json();
+      const parts = geminiResp.candidates?.[0]?.content?.parts || [];
+      reply = parts.filter(p => !p.thought).pop()?.text || parts[0]?.text || "";
     } else if (p === "GROQ") {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
