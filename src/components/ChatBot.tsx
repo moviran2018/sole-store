@@ -6,7 +6,7 @@ import { getAiClient, hasAiConfigured } from "@/lib/ai-client";
 import { getKnowledgeBase, buildKnowledgePrompt } from "@/lib/knowledge";
 import { loadChatbotSettings } from "@/lib/chatbot-settings";
 import { buildStoreSummary } from "@/lib/chatbot-data";
-import { getAllShoes, getOrders, getMessages } from "@/lib/shoe-store";
+import { getAllShoes } from "@/lib/shoe-store";
 import type { Shoe } from "@/types/shoe";
 import type { KnowledgeEntry } from "@/lib/knowledge";
 
