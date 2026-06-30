@@ -28,6 +28,8 @@ async function handleRequest(request) {
     return json({ knowledgeUrl: typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null });
   }
 
+  if (url.pathname === "/transcribe" && request.method === "POST") return handleTranscribe(request);
+
   return json({ error: "not found" }, 404);
 }
 
@@ -44,6 +46,32 @@ function json(data, status = 200) {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders() },
   });
+}
+
+async function handleTranscribe(request) {
+  try {
+    const form = await request.formData();
+    const audio = form.get("audio");
+    if (!audio) return json({ error: "audio file required" }, 400);
+    const apiKey = AI_API_KEY_GROQ;
+    if (!apiKey) return json({ error: "Groq API key not configured" }, 500);
+    const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: (() => {
+        const fd = new FormData();
+        fd.append("file", audio, "recording.webm");
+        fd.append("model", "whisper-large-v3-turbo");
+        fd.append("language", "fa");
+        return fd;
+      })(),
+    });
+    if (!res.ok) throw new Error(`Transcribe error (${res.status}): ${await res.text().catch(() => "")}`);
+    const data = await res.json();
+    return json({ text: data.text || "" });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
 }
 
 async function handleChat(request) {

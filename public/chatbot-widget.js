@@ -42,9 +42,11 @@
 #cb-input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;color:#fff;font-size:13px;outline:none;direction:rtl}
 #cb-input:focus{border-color:#f97316}
 #cb-input::placeholder{color:rgba(255,255,255,.3)}
-#cb-send{background:#f97316;color:#fff;border:none;border-radius:10px;width:42px;height:42px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
-#cb-send:hover{background:#ea580c}
+#cb-send,#cb-mic{background:#f97316;color:#fff;border:none;border-radius:10px;width:42px;height:42px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+#cb-send:hover,#cb-mic:hover{background:#ea580c}
 #cb-send:disabled{opacity:.4;cursor:default}
+#cb-mic.recording{background:#ef4444;animation:cb-pulse .8s infinite}
+@keyframes cb-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 @media(max-width:480px){#cb-panel{left:10px;right:10px;width:auto;bottom:80px;height:75vh}}
 `;
 
@@ -67,6 +69,7 @@
         <div id="cb-messages"></div>
         <div id="cb-input-wrap">
           <input id="cb-input" type="text" placeholder="پیام خود را بنویسید..." />
+          <button id="cb-mic" title="ضبط صدا (hold)">🎤</button>
           <button id="cb-send" disabled>➤</button>
         </div>
       </div>`;
@@ -77,6 +80,7 @@
     const close = document.getElementById("cb-close");
     const input = document.getElementById("cb-input");
     const send = document.getElementById("cb-send");
+    const mic = document.getElementById("cb-mic");
     const msgs = document.getElementById("cb-messages");
 
     btn.onclick = () => panel.classList.add("open");
@@ -85,7 +89,44 @@
     input.onkeydown = (e) => { if (e.key === "Enter") sendMsg(); };
     send.onclick = sendMsg;
 
-    return { btn, panel, close, input, send, msgs };
+    let recorder = null, chunks = [];
+    function startRec() {
+      if (recorder) return;
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        chunks = [];
+        recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+        recorder.onstop = () => {
+          stream.getTracks().forEach((t) => t.stop());
+          mic.classList.remove("recording");
+          const blob = new Blob(chunks, { type: "audio/webm" });
+          if (blob.size < 1000) return;
+          addMessage("user", "🎤 (پیام صوتی در حال پردازش...)");
+          showLoading();
+          const fd = new FormData();
+          fd.append("audio", blob, "recording.webm");
+          fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd })
+            .then((r) => r.json()).then((d) => {
+              hideLoading();
+              const txt = d.text || "";
+              if (!txt) return;
+              document.getElementById("cb-messages").lastElementChild?.remove();
+              sendMsgText(txt);
+            }).catch(() => { hideLoading(); });
+        };
+        recorder.start();
+        mic.classList.add("recording");
+      }).catch(() => {});
+    }
+    function stopRec() { if (recorder && recorder.state !== "inactive") { recorder.stop(); recorder = null; } }
+
+    mic.addEventListener("mousedown", startRec);
+    mic.addEventListener("mouseup", stopRec);
+    mic.addEventListener("mouseleave", stopRec);
+    mic.addEventListener("touchstart", (e) => { e.preventDefault(); startRec(); });
+    mic.addEventListener("touchend", (e) => { e.preventDefault(); stopRec(); });
+
+    return { btn, panel, close, input, send, msgs, mic };
   }
 
   function escHtml(s) {
@@ -129,17 +170,10 @@
     if (el) el.remove();
   }
 
-  async function sendMsg() {
-    const input = document.getElementById("cb-input");
-    const send = document.getElementById("cb-send");
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = "";
-    send.disabled = true;
-
+  async function sendMsgText(text) {
+    if (!text?.trim()) return;
     addMessage("user", text);
     showLoading();
-
     try {
       const payload = { message: text, history: state.messages.slice(-10), provider: PROVIDER };
       if (KNOWLEDGE_URL) payload.knowledgeUrl = KNOWLEDGE_URL;
@@ -165,6 +199,16 @@
       addMessage("bot", fallback);
       state.messages.push({ role: "user", content: text }, { role: "assistant", content: fallback });
     }
+  }
+
+  async function sendMsg() {
+    const input = document.getElementById("cb-input");
+    const send = document.getElementById("cb-send");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    send.disabled = true;
+    await sendMsgText(text);
   }
 
   injectStyles();

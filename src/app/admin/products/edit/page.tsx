@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getShoeById, addShoe, getAllShoes, categories } from "@/lib/shoe-store";
 import { shoeSvg } from "@/data/shoes";
@@ -29,16 +29,7 @@ function EditForm() {
   });
   const [saving, setSaving] = useState(false);
 
-  async function generateId(category: string): Promise<string> {
-    const prefix = catPrefix[category] || "gen";
-    const all = await getAllShoes();
-    let max = 0;
-    for (const s of all) {
-      const m = s.id.match(new RegExp(`^${prefix}-(\\d+)$`));
-      if (m) max = Math.max(max, parseInt(m[1]));
-    }
-    return `${prefix}-${String(max + 1).padStart(3, "0")}`;
-  }
+  const idGenerated = useRef(false);
 
   useEffect(() => {
     if (id) {
@@ -56,14 +47,20 @@ function EditForm() {
           });
         }
       })();
+    } else if (!idGenerated.current) {
+      idGenerated.current = true;
+      (async () => {
+        const prefix = catPrefix[form.category] || "gen";
+        const all = await getAllShoes();
+        let max = 0;
+        for (const s of all) {
+          const m = s.id.match(new RegExp(`^${prefix}-(\\d+)$`));
+          if (m) max = Math.max(max, parseInt(m[1]));
+        }
+        setForm((f) => ({ ...f, id: `${prefix}-${String(max + 1).padStart(3, "0")}` }));
+      })();
     }
   }, [id]);
-
-  useEffect(() => {
-    if (!id) {
-      generateId(form.category).then((newId) => setForm((f) => ({ ...f, id: newId })));
-    }
-  }, [form.category, id]);
 
   const cat = categories.find((c) => c.id === form.category);
 
