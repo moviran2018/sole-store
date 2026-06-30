@@ -1,0 +1,16 @@
+name = "chatbot-worker"
+main = "worker/index.js"
+compatibility_date = "2025-04-01"
+
+[vars]
+AI_PROVIDER = "groq"
+SYSTEM_PROMPT = "You are a helpful Persian AI assistant for an online store. Answer in Persian about products, orders, shipping, and returns."
+
+[env.production.vars]
+AI_PROVIDER = "groq"
+SYSTEM_PROMPT = "You are SoleBot, a Persian AI assistant for Sole Store. Answer ONLY about Sole Store products. Always include /products/{id} links."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chatbot-kb"
+database_id = ""

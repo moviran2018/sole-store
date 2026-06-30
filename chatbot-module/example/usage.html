@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <title>نمونه چت‌بات هوشمند</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; margin: 40px; background: #f5f5f5; text-align: center; }
+    h1 { color: #333; }
+    p { color: #666; }
+  </style>
+</head>
+<body>
+  <h1>فروشگاه نمونه</h1>
+  <p>چت‌بات در گوشه پایین سمت چپ ظاهر می‌شود.</p>
+
+  <script
+    src="../widget/chatbot-widget.js"
+    data-worker="https://your-worker.your-name.workers.dev"
+    data-site="sole-store"
+    data-provider="groq"
+    data-title="SoleBot"
+    data-welcome="سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمک کنم؟"
+    data-knowledge="/data/products.json"
+  ></script>
+</body>
+</html>
