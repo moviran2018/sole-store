@@ -49,32 +49,105 @@ function pickColors(seed: number): { name: string; hex: string }[] {
   return available.slice(0, count);
 }
 
-const catColors: Record<string, [string, string, string]> = {
-  sneakers: ["#1a1a2e", "#ff6b00", "👟"],
-  formal: ["#1a1a1a", "#8B4513", "👞"],
-  running: ["#0d1b2a", "#00b894", "🏃"],
-  casual: ["#1b0a2e", "#6c5ce7", "🥿"],
-  boots: ["#1a0f0a", "#A0522D", "👢"],
-  sandals: ["#1a1a0a", "#fdcb6e", "🩴"],
-  loafers: ["#1a0a0a", "#e17055", "👞"],
-  slides: ["#0a1a1a", "#00cec9", "🩴"],
-  heels: ["#1a0a14", "#fd79a8", "👠"],
-  sport: ["#0a0a1a", "#0984e3", "⚽"],
+const catTheme: Record<string, { bg: string; bg2: string; ac: string; body: string; sole: string }> = {
+  sneakers: { bg: "#1a1a2e", bg2: "#0d0d1a", ac: "#ff6b00", body: "#2a2a4e", sole: "#1a1a3e" },
+  formal:   { bg: "#1a1a1a", bg2: "#0a0a0a", ac: "#8B4513", body: "#3a3a3a", sole: "#1a1a1a" },
+  running:  { bg: "#0d1b2a", bg2: "#070f1a", ac: "#00b894", body: "#1a3a4a", sole: "#0d2a3a" },
+  casual:   { bg: "#1b0a2e", bg2: "#10061a", ac: "#6c5ce7", body: "#3a2a5e", sole: "#2a1a4e" },
+  boots:    { bg: "#1a0f0a", bg2: "#0f0805", ac: "#A0522D", body: "#3a2a1a", sole: "#2a1a0a" },
+  sandals:  { bg: "#1a1a0a", bg2: "#0f0f05", ac: "#fdcb6e", body: "#3a3a1a", sole: "#2a2a0a" },
+  loafers:  { bg: "#1a0a0a", bg2: "#0f0505", ac: "#e17055", body: "#3a1a1a", sole: "#2a0a0a" },
+  slides:   { bg: "#0a1a1a", bg2: "#050f0f", ac: "#00cec9", body: "#1a3a3a", sole: "#0a2a2a" },
+  heels:    { bg: "#1a0a14", bg2: "#0f050b", ac: "#fd79a8", body: "#3a1a2e", sole: "#2a0a1e" },
+  sport:    { bg: "#0a0a1a", bg2: "#05050f", ac: "#0984e3", body: "#1a1a3a", sole: "#0a0a2a" },
 };
-function shoeSvg(cat: string, name: string, v: number): string {
-  const [bg, accent, emoji] = catColors[cat] || catColors.sneakers;
+const shoePaths: Record<string, string> = {
+  sneakers: `<path d="M140,380 C130,380 120,370 120,360 L120,340 C120,330 130,320 140,310 C160,290 190,270 210,250 C230,230 240,200 240,180 C240,160 250,150 270,150 C290,150 300,160 310,180 C320,200 330,230 360,250 C390,270 420,290 440,310 Q460,330 470,350 L480,370 Q480,390 460,390 Z" fill="currentColor" opacity=".85"/>
+  <path d="M120,380 C120,390 130,400 140,410 L460,410 C470,400 480,390 480,380 L120,380 Z" fill="currentColor" opacity=".6"/>
+  <path d="M250,150 L260,150 Q270,165 270,180 C270,195 260,210 250,220 L240,220 Q240,200 245,185 Q250,170 250,150 Z" fill="currentColor" opacity=".5"/>
+  <circle cx="320" cy="180" r="4" fill="currentColor" opacity=".4"/>
+  <circle cx="340" cy="185" r="4" fill="currentColor" opacity=".4"/>
+  <circle cx="360" cy="195" r="4" fill="currentColor" opacity=".4"/>`,
+  formal: `<path d="M100,370 L460,370 Q480,370 480,350 L480,330 Q480,310 450,300 C420,290 380,280 350,260 C320,240 300,210 280,180 C270,160 250,150 230,160 C210,170 200,190 190,220 C180,250 160,280 130,300 Q110,320 100,340 Z" fill="currentColor" opacity=".85"/>
+  <path d="M100,370 C100,380 110,390 120,395 L460,395 Q470,390 480,380 L480,370 Z" fill="currentColor" opacity=".55"/>
+  <path d="M240,165 L250,165 Q260,178 260,190 C260,205 250,215 240,225 L230,225 Q235,210 238,195 Q240,180 240,165 Z" fill="currentColor" opacity=".45"/>
+  <path d="M290,185 L350,200" stroke="currentColor" stroke-width="2" opacity=".35"/>
+  <path d="M295,195 L345,208" stroke="currentColor" stroke-width="2" opacity=".35"/>`,
+  running: `<path d="M90,380 L430,380 Q460,380 470,350 L480,320 Q480,290 460,270 C430,250 390,230 360,210 C330,190 310,160 300,130 C290,110 280,100 260,110 C240,120 230,140 230,170 C230,200 210,240 180,270 C150,300 120,330 100,350 Q90,370 90,380 Z" fill="currentColor" opacity=".85"/>
+  <path d="M90,380 C90,395 100,405 110,410 L440,410 C455,405 465,395 470,380 Z" fill="currentColor" opacity=".55"/>
+  <ellipse cx="290" cy="410" rx="50" ry="20" fill="currentColor" opacity=".5"/>
+  <path d="M340,120 L350,120 Q360,135 360,150 C360,165 350,180 340,190 L330,190 Q340,170 342,155 Q345,140 340,120 Z" fill="currentColor" opacity=".4"/>
+  <line x1="140" y1="395" x2="340" y2="395" stroke="currentColor" stroke-width="3" opacity=".3"/>`,
+  casual: `<path d="M120,370 L450,370 Q470,370 470,350 L470,330 Q470,310 450,300 C420,290 380,280 360,270 C340,260 320,240 310,220 C300,200 290,180 270,170 C250,160 230,170 210,190 C190,210 170,250 140,280 Q120,300 120,330 Z" fill="currentColor" opacity=".85"/>
+  <path d="M120,370 C120,380 130,390 140,395 L460,395 Q470,390 480,380 L480,370 Z" fill="currentColor" opacity=".55"/>
+  <ellipse cx="320" cy="280" rx="40" ry="15" fill="currentColor" opacity=".3"/>
+  <path d="M190,230 Q220,200 260,200" stroke="currentColor" stroke-width="2" fill="none" opacity=".4"/>`,
+  boots: `<path d="M150,380 C140,380 130,370 130,360 L130,250 C130,220 140,190 150,170 C160,150 180,140 200,140 L280,140 C300,140 320,150 330,170 C340,190 350,220 350,250 L350,310 C350,330 380,340 410,350 Q450,360 470,370 L470,390 Q470,400 460,400 Z" fill="currentColor" opacity=".85"/>
+  <path d="M130,380 C130,395 140,405 150,410 L460,410 Q470,405 480,395 L480,380 Z" fill="currentColor" opacity=".55"/>
+  <rect x="200" y="160" width="100" height="110" rx="10" fill="currentColor" opacity=".35"/>
+  <path d="M200,270 L200,320" stroke="currentColor" stroke-width="3" opacity=".5"/>
+  <path d="M300,270 L300,320" stroke="currentColor" stroke-width="3" opacity=".5"/>
+  <line x1="150" y1="310" x2="350" y2="310" stroke="currentColor" stroke-width="2" opacity=".3"/>`,
+  sandals: `<ellipse cx="300" cy="280" rx="160" ry="50" fill="currentColor" opacity=".85"/>
+  <rect x="140" y="310" width="320" height="80" rx="40" fill="currentColor" opacity=".85"/>
+  <rect x="140" y="310" width="320" height="80" rx="40" fill="currentColor" opacity=".55"/>
+  <path d="M200,180 L180,310" stroke="currentColor" stroke-width="12" stroke-linecap="round" opacity=".7"/>
+  <path d="M380,180 L400,310" stroke="currentColor" stroke-width="12" stroke-linecap="round" opacity=".7"/>
+  <path d="M260,170 L280,310" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity=".5"/>
+  <ellipse cx="300" cy="350" rx="140" ry="35" fill="currentColor" opacity=".3"/>
+  <circle cx="200" cy="200" r="8" fill="currentColor" opacity=".4"/>
+  <circle cx="380" cy="200" r="8" fill="currentColor" opacity=".4"/>`,
+  loafers: `<path d="M130,370 L450,370 Q470,370 470,350 L470,330 Q470,310 450,300 C420,290 390,280 370,270 C350,260 330,240 320,220 C310,200 300,180 280,170 C260,160 240,165 220,180 C200,195 180,220 160,250 Q140,280 130,310 Z" fill="currentColor" opacity=".85"/>
+  <path d="M130,370 C130,385 140,393 150,398 L460,398 Q470,393 480,385 L480,370 Z" fill="currentColor" opacity=".55"/>
+  <path d="M270,175 L280,175 Q290,185 290,195 C290,208 280,218 270,225 L260,225 Q268,212 270,200 Q272,188 270,175 Z" fill="currentColor" opacity=".45"/>
+  <ellipse cx="320" cy="270" rx="35" ry="12" fill="currentColor" opacity=".25"/>
+  <path d="M200,230 Q230,205 260,200" stroke="currentColor" stroke-width="2" fill="none" opacity=".4"/>
+  <circle cx="300" cy="190" r="5" fill="currentColor" opacity=".3"/>`,
+  slides: `<ellipse cx="300" cy="280" rx="170" ry="45" fill="currentColor" opacity=".85"/>
+  <ellipse cx="300" cy="350" rx="160" ry="40" fill="currentColor" opacity=".55"/>
+  <path d="M200,180 C200,180 230,310 280,310" stroke="currentColor" stroke-width="14" stroke-linecap="round" fill="none" opacity=".7"/>
+  <ellipse cx="300" cy="200" rx="80" ry="12" fill="currentColor" opacity=".4"/>
+  <ellipse cx="300" cy="340" rx="130" ry="30" fill="currentColor" opacity=".25"/>
+  <circle cx="220" cy="195" r="6" fill="currentColor" opacity=".35"/>
+  <circle cx="370" cy="195" r="6" fill="currentColor" opacity=".35"/>`,
+  heels: `<path d="M140,350 L450,350 Q470,350 470,330 L470,310 Q470,290 450,280 C420,270 390,260 370,250 C350,240 330,220 320,200 C310,180 300,160 280,150 C260,140 240,150 220,170 C200,190 180,220 160,250 Q140,280 130,310 Z" fill="currentColor" opacity=".85"/>
+  <path d="M130,350 L170,460 Q180,480 200,480 L210,480 Q230,480 240,460 L280,350 Z" fill="currentColor" opacity=".55"/>
+  <path d="M130,350 C130,360 140,368 150,375 L460,375 Q470,368 480,360 L480,350 Z" fill="currentColor" opacity=".6"/>
+  <ellipse cx="300" cy="250" rx="35" ry="10" fill="currentColor" opacity=".25"/>
+  <path d="M160,365 L460,365" stroke="currentColor" stroke-width="1.5" opacity=".2"/>
+  <path d="M200,180 Q240,160 270,160" stroke="currentColor" stroke-width="2" fill="none" opacity=".35"/>`,
+  sport: `<path d="M100,380 L440,380 Q470,380 480,350 L490,310 Q490,280 470,260 C440,240 400,220 370,200 C340,180 320,150 310,120 C300,100 290,90 270,100 C250,110 240,130 230,160 C220,190 200,230 170,260 C140,290 110,320 100,350 Z" fill="currentColor" opacity=".85"/>
+  <path d="M100,380 C100,395 110,405 120,410 L450,410 C460,405 470,395 480,380 Z" fill="currentColor" opacity=".55"/>
+  <rect x="350" y="390" width="100" height="20" rx="5" fill="currentColor" opacity=".4"/>
+  <rect x="200" y="390" width="80" height="20" rx="5" fill="currentColor" opacity=".4"/>
+  <path d="M330,110 L340,110 Q350,125 350,140 C350,155 340,170 330,180 L320,180 Q330,160 332,145 Q335,130 330,110 Z" fill="currentColor" opacity=".4"/>
+  <line x1="130" y1="395" x2="380" y2="395" stroke="currentColor" stroke-width="3" opacity=".25"/>`,
+};
+function shoeSvg(cat: string, name: string, v: number, brand: string = ""): string {
+  const t = catTheme[cat] || catTheme.sneakers;
   const n = name.replace(/[&<>"']/g, "_");
-  const emojiSize = v === 3 ? 140 : v === 2 ? 110 : 90;
-  const yOffset = v === 0 ? -10 : v === 1 ? 10 : 0;
-  const s = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">` +
-    `<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">` +
-    `<stop offset="0%" stop-color="${bg}"/><stop offset="100%" stop-color="#000"/>` +
-    `</linearGradient></defs>` +
-    `<rect width="600" height="600" fill="url(#g)"/>` +
-    `<circle cx="300" cy="${240 + yOffset}" r="100" fill="${accent}" opacity=".08"/>` +
-    `<text x="300" y="${270 + yOffset}" text-anchor="middle" font-size="${emojiSize}" dominant-baseline="central">${emoji}</text>` +
-    `<text x="300" y="${390 + yOffset}" text-anchor="middle" font-size="24" fill="${accent}" font-family="sans-serif" font-weight="bold">${n}</text>` +
-    `<rect x="100" y="${420 + yOffset}" width="400" height="2" rx="1" fill="${accent}" opacity=".3"/></svg>`;
+  const b = brand.replace(/[&<>"']/g, "_");
+  const rx = v === 1 ? "-1 1" : "0 1";
+  const fl = v === 3 ? "scale(-1,1) translate(-600,0)" : "";
+  const sc = v === 2 ? 1.15 : 1;
+  const s = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" stop-color="${t.bg}"/><stop offset="100%" stop-color="${t.bg2}"/>
+</linearGradient>
+<filter id="g"><feGaussianBlur stdDeviation="20"/></filter>
+</defs>
+<rect width="600" height="600" fill="url(#g)"/>
+<ellipse cx="300" cy="300" rx="180" ry="180" fill="${t.ac}" opacity=".05" transform="scale(${sc})"/>
+<g transform="${fl} translate(0,0)">
+<ellipse cx="300" cy="430" rx="200" ry="30" fill="#000" opacity=".3"/>
+<g transform="translate(300,300) scale(${sc}) translate(-300,-300)">
+<g color="${t.ac}">${shoePaths[cat]}</g>
+</g>
+</g>
+<text x="300" y="490" text-anchor="middle" font-size="22" fill="${t.ac}" font-family="sans-serif" font-weight="bold">${n}</text>
+<text x="300" y="515" text-anchor="middle" font-size="14" fill="${t.ac}" opacity=".6" font-family="sans-serif">${b || cat}</text>
+<rect x="180" y="535" width="240" height="2" rx="1" fill="${t.ac}" opacity=".25"/>
+</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s)}`;
 }
 
@@ -264,8 +337,8 @@ export const shoes: Shoe[] = rawShoes.map((s, i) => ({
   categoryPersian: s.categoryPersian,
   sizes: pickSizes(i + 1),
   colors: pickColors(i + 3),
-  image: shoeSvg(s.category, s.namePersian, 0),
-  images: [shoeSvg(s.category, s.namePersian, 1), shoeSvg(s.category, s.namePersian, 2), shoeSvg(s.category, s.namePersian, 3)],
+  image: shoeSvg(s.category, s.namePersian, 0, s.brand),
+  images: [shoeSvg(s.category, s.namePersian, 1, s.brand), shoeSvg(s.category, s.namePersian, 2, s.brand), shoeSvg(s.category, s.namePersian, 3, s.brand)],
   brand: s.brand,
   rating: +(3.5 + rng(i + 5) * 1.5).toFixed(1),
   inStock: true,
