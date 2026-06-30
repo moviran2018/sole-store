@@ -62,7 +62,8 @@ You MUST ONLY answer about the store's products, policies, and services. Politel
 2. When recommending a product, ALWAYS include its direct link: /products/{id}
 3. Use Persian (fa-IR) in a friendly tone
 4. Be concise but helpful
-5. If asked something outside store scope, say: "من فقط می‌توانم درباره محصولات و خدمات فروشگاه Sole به شما کمک کنم."`;
+5. If asked something outside store scope, say: "من فقط می‌توانم درباره محصولات و خدمات فروشگاه Sole به شما کمک کنم."
+6. If the user uses profanity or inappropriate language, politely say: "❌ لطفاً محترمانه و در چهارچوب اخلاقی سوال خود را مطرح فرمایید."`;
 
   const catalog = makeProductCatalog(products);
   if (catalog) prompt += `\n\n${catalog}`;
@@ -207,6 +208,14 @@ export default function ChatBot({ products }: Props) {
 
   const processUserText = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
+
+    if (containsProfanity(text)) {
+      setMessages((prev) => [...prev, { role: "user", text },
+        { role: "bot", text: "❌ لطفاً محترمانه و در چهارچوب اخلاقی سوال خود را مطرح فرمایید. از کلمات نامناسب استفاده نکنید." },
+      ]);
+      return;
+    }
+
     setMessages((prev) => [...prev, { role: "user", text }]);
     setLoading(true);
 
@@ -359,6 +368,25 @@ export default function ChatBot({ products }: Props) {
       </div>
     </>
   );
+}
+
+/* ── Profanity filter ── */
+const profanityList = [
+  "کثافت", "کون", "کیر", "کس", "جنده", "حرومی", "حرومزاده", "مادرجنده", "پدرجنده",
+  "خواهرجنده", "گایید", "گائید", "گا.", "آبکیر", "آشغال", "ننت", "ننه", "مادرتو",
+  "مادرت", "پدسگ", "پدر سگ", "سگپدر", "سگ پدر", "خارکصه", "خارکس", "منگف",
+  "ساک زدن", "ساکزدن", "لاپا", "خایه", "خایمال", "کصکش", "کصخل", "کسکش",
+  "کس لیس", "کسلیس", "داف", "سکس", "فحش", "فحاشی", "bitch", "fuck", "shit",
+  "asshole", "bastard", "whore", "damn", "cunt", "dick", "piss off",
+];
+
+function containsProfanity(text: string): boolean {
+  const lower = text.toLowerCase().replace(/[-\s]/g, "");
+  for (const word of profanityList) {
+    const pattern = word.toLowerCase().replace(/[-\s]/g, "");
+    if (lower.includes(pattern)) return true;
+  }
+  return false;
 }
 
 /** Convert markdown-style links `/products/xxx` and media URLs to clickable elements */
