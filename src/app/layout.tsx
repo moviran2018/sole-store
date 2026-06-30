@@ -31,13 +31,14 @@ export default function RootLayout({
           <Footer />
           <MobileNav />
           <Script
-            src="/chatbot-widget.js"
+            src="/sole-store/chatbot-widget.js"
             strategy="lazyOnload"
             data-worker="https://sole-chatbot.moviran2018.workers.dev"
             data-site="sole-store"
             data-provider="groq"
             data-title="SoleBot"
             data-welcome="سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمک کنم؟"
+            data-knowledge="/sole-store/data/products.json"
           />
         </CartProvider>
       </body>
