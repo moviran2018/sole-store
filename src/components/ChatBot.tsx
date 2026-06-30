@@ -77,64 +77,84 @@ interface Props {
   products: Shoe[];
 }
 
-/** Hook: returns a start/stop voice recorder using the Web Speech API */
+/** Hook: press-and-hold voice recorder using the Web Speech API */
 function useVoiceRecognition() {
   const recognitionRef = useRef<any>(null);
   const [recording, setRecording] = useState(false);
   const [supported, setSupported] = useState(true);
+  const holdingRef = useRef(false);
+  const transcriptRef = useRef("");
+  const resultCbRef = useRef<((text: string) => void) | null>(null);
+  const errorCbRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const SpeechRecognition = (window as any).SpeechRecognition
-      || (window as any).webkitSpeechRecognition
-      || (window as any).mozSpeechRecognition
-      || (window as any).msSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) setSupported(false);
   }, []);
 
-  const startListening = useCallback((onResult: (text: string) => void, onError?: () => void) => {
-    if (typeof window === "undefined") return;
-    const SpeechRecognition = (window as any).SpeechRecognition
-      || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+  const createRecognition = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return null;
 
     const recognition = new SpeechRecognition();
     recognition.lang = "fa-IR";
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
-
-    let finalText = "";
 
     recognition.onresult = (event: any) => {
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
-          finalText += event.results[i][0].transcript + " ";
+          transcriptRef.current = event.results[i][0].transcript;
         }
       }
     };
 
     recognition.onerror = () => {
       setRecording(false);
-      onError?.();
+      holdingRef.current = false;
+      errorCbRef.current?.();
     };
 
     recognition.onend = () => {
-      setRecording(false);
-      if (finalText.trim()) onResult(finalText.trim());
+      if (holdingRef.current) {
+        const newRec = createRecognition();
+        if (newRec) {
+          recognitionRef.current = newRec;
+          try { newRec.start(); } catch { }
+        }
+      } else {
+        setRecording(false);
+        const txt = transcriptRef.current.trim();
+        transcriptRef.current = "";
+        if (txt) resultCbRef.current?.(txt);
+      }
     };
 
+    return recognition;
+  }, []);
+
+  const startListening = useCallback((onResult: (text: string) => void, onError?: () => void) => {
+    if (typeof window === "undefined") return;
+    resultCbRef.current = onResult;
+    errorCbRef.current = onError || null;
+    transcriptRef.current = "";
+    holdingRef.current = true;
+
+    const recognition = createRecognition();
+    if (!recognition) return;
     recognitionRef.current = recognition;
     setRecording(true);
     recognition.start();
-  }, []);
+  }, [createRecognition]);
 
   const stopListening = useCallback(() => {
+    holdingRef.current = false;
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch { }
       recognitionRef.current = null;
     }
-    setRecording(false);
   }, []);
 
   return { recording, supported, startListening, stopListening };
