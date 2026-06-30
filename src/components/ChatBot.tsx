@@ -502,7 +502,7 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
 
   // 2) Specific product search (by name or brand)
   const matched = products.filter((p) =>
-    p.namePersian.includes(query) || p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query)
+    query.includes(p.namePersian.toLowerCase()) || query.includes(p.name.toLowerCase()) || query.includes(p.brand.toLowerCase())
   ).slice(0, 3);
   if (matched.length > 0) {
     return matched.map((p) =>
