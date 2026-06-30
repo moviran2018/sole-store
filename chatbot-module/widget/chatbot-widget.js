@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const SCRIPT = document.currentScript;
+  const SCRIPT = document.currentScript || document.querySelector("script[src*=\"chatbot-widget\"]");
   const WORKER_URL = SCRIPT?.getAttribute("data-worker") || "";
   const SITE_ID = SCRIPT?.getAttribute("data-site") || "";
   const LANG = SCRIPT?.getAttribute("data-lang") || "fa";

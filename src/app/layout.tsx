@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -30,16 +29,16 @@ export default function RootLayout({
           <main className="flex-1 pb-16 sm:pb-0">{children}</main>
           <Footer />
           <MobileNav />
-          <Script
+          <script
             src="/sole-store/chatbot-widget.js"
-            strategy="lazyOnload"
             data-worker="https://sole-chatbot.moviran2018.workers.dev"
             data-site="sole-store"
             data-provider="groq"
             data-title="SoleBot"
             data-welcome="سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمک کنم؟"
             data-knowledge="/sole-store/data/products.json"
-          />
+            defer
+          ></script>
         </CartProvider>
       </body>
     </html>
