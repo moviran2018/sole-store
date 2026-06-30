@@ -8,6 +8,7 @@
   const PROVIDER = SCRIPT?.getAttribute("data-provider") || "groq";
   const TITLE = SCRIPT?.getAttribute("data-title") || "SoleBot";
   const WELCOME = SCRIPT?.getAttribute("data-welcome") || "سلام! چطور می‌توانم کمک کنم؟";
+  const KNOWLEDGE_URL = SCRIPT?.getAttribute("data-knowledge-url") || "";
 
   if (!WORKER_URL) return console.warn("Chatbot: data-worker attribute required");
 
@@ -140,7 +141,8 @@
     showLoading();
 
     try {
-      const payload = { message: text, history: state.messages.slice(-20), provider: PROVIDER };
+      const payload = { message: text, history: state.messages.slice(-10), provider: PROVIDER };
+      if (KNOWLEDGE_URL) payload.knowledgeUrl = KNOWLEDGE_URL;
       if (state.products.length) payload.knowledge = JSON.stringify(state.products);
       const res = await fetch(WORKER_URL + "/chat", {
         method: "POST",

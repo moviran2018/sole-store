@@ -3,30 +3,44 @@ addEventListener("fetch", (event) => {
 });
 
 const PRODUCTS_URL = "https://moviran2018.github.io/sole-store/data/products.json";
-let cachedProducts = null;
-let cacheTime = 0;
+let cache = { products: null, knowledge: null, time: 0 };
 
 async function getProducts() {
-  if (cachedProducts && Date.now() - cacheTime < 300000) return cachedProducts;
+  if (cache.products && Date.now() - cache.time < 300000) return cache.products;
   try {
     const res = await fetch(PRODUCTS_URL);
     const data = await res.json();
-    cachedProducts = JSON.stringify(data.products || []);
-    cacheTime = Date.now();
+    cache.products = JSON.stringify(data.products || []);
+    cache.time = Date.now();
   } catch (e) {
-    if (!cachedProducts) cachedProducts = "";
+    if (!cache.products) cache.products = "";
   }
-  return cachedProducts;
+  return cache.products;
+}
+
+async function getKnowledge(url) {
+  if (!url) return null;
+  if (cache.knowledge && cache.time > Date.now() - 60000) return cache.knowledge;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    cache.knowledge = text;
+    cache.time = Date.now();
+    return text;
+  } catch { return null; }
 }
 
 async function handleRequest(request) {
-  if (request.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders() });
-  }
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders() });
 
   const url = new URL(request.url);
   if (url.pathname === "/health") return json({ ok: true, keySet: !!AI_API_KEY_GROQ });
+
   if (url.pathname === "/chat" && request.method === "POST") return handleChat(request);
+
+  if (url.pathname === "/knowledge" && request.method === "GET") {
+    return json({ knowledgeUrl: typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null });
+  }
 
   return json({ error: "not found" }, 404);
 }
@@ -48,31 +62,44 @@ function json(data, status = 200) {
 
 async function handleChat(request) {
   try {
-    const { message, history, provider } = await request.json();
+    const { message, history, provider, knowledgeUrl } = await request.json();
     if (!message?.trim()) return json({ error: "message is required" }, 400);
 
     const p = (provider || "groq").toUpperCase();
     const apiKey = p === "GROQ" ? AI_API_KEY_GROQ : p === "OPENAI" ? AI_API_KEY_OPENAI : AI_API_KEY_CLAUDE;
     if (!apiKey) return json({ error: `API key for ${p} not configured` }, 500);
 
-    const productsStr = await getProducts();
-    const systemPrompt = (typeof SYSTEM_PROMPT !== "undefined" ? SYSTEM_PROMPT :
-      "You are SoleBot, a Persian AI assistant for Sole Store, an online shoe store. " +
-      "Answer ONLY about Sole Store products using the product data below. " +
-      "Be helpful, concise, and friendly in Persian. If asked about something not in the data, say you don't have that information."
-    );
-    const sys = productsStr
-      ? systemPrompt + "\n\n## PRODUCTS DATA\n" + productsStr
-      : systemPrompt;
+    const [productsStr, docContent] = await Promise.all([
+      getProducts(),
+      getKnowledge(knowledgeUrl || (typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null)),
+    ]);
 
-    const messages = [{ role: "system", content: sys }, ...(history || []), { role: "user", content: message }];
+    let sys = "You are SoleBot, a Persian AI assistant for Sole Store (online shoe store). " +
+      "Answer concisely in Persian using ONLY the provided data. " +
+      "If the answer is not in the data, say exactly: 'اطلاعاتی در این مورد ندارم.' " +
+      "DO NOT repeat yourself. DO NOT make up information.";
+
+    if (docContent) sys += "\n\n## STORE INFO (Google Doc)\n" + docContent.slice(0, 8000);
+    if (productsStr) sys += "\n\n## PRODUCTS\n" + productsStr;
+
+    const his = (history || []).slice(-10);
+    const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
     let reply;
+
+    const body = {
+      model: "llama-3.3-70b-versatile",
+      messages,
+      temperature: 0.5,
+      max_tokens: 600,
+      frequency_penalty: 0.3,
+      presence_penalty: 0.2,
+    };
 
     if (p === "GROQ") {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, temperature: 0.3, max_tokens: 1024 }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`Groq error (${res.status}): ${await res.text().catch(() => "")}`);
       reply = (await res.json()).choices?.[0]?.message?.content || "";
@@ -80,7 +107,7 @@ async function handleChat(request) {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "gpt-4o-mini", messages, temperature: 0.3, max_tokens: 1024 }),
+        body: JSON.stringify({ model: "gpt-4o-mini", ...body }),
       });
       if (!res.ok) throw new Error(`OpenAI error (${res.status}): ${await res.text().catch(() => "")}`);
       reply = (await res.json()).choices?.[0]?.message?.content || "";
@@ -92,7 +119,7 @@ async function handleChat(request) {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-3-haiku-20240307", system: sysMsg, messages: chatMsgs, max_tokens: 1024 }),
+        body: JSON.stringify({ model: "claude-3-haiku-20240307", system: sysMsg, messages: chatMsgs, max_tokens: 600 }),
       });
       if (!res.ok) throw new Error(`Claude error (${res.status}): ${await res.text().catch(() => "")}`);
       reply = (await res.json()).content?.[0]?.text || "";
