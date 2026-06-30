@@ -434,6 +434,49 @@ export default function ProductDetailContent({ shoeId, staticShoe }: { shoeId: s
           </div>
         </div>
 
+        {/* === Media Section === */}
+        {(shoe.imageLinks?.length || shoe.podcastLink || shoe.videoLink) && (
+          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-[var(--border)]">
+            <h2 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6">رسانه‌ها</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {shoe.imageLinks?.map((link, i) => (
+                <a key={i} href={link} target="_blank" rel="noopener noreferrer"
+                  className="aspect-video bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:border-orange-500/50 transition-all group">
+                  <img src={link} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                </a>
+              ))}
+              {shoe.podcastLink && (
+                <a href={shoe.podcastLink} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-4 bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all group">
+                  <div className="w-12 h-12 rounded-xl bg-orange-600/20 flex items-center justify-center text-orange-500 shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white font-medium group-hover:text-orange-400 transition-colors">پادکست محصول</p>
+                    <p className="text-xs text-gray-500">گوش دادن</p>
+                  </div>
+                </a>
+              )}
+              {shoe.videoLink && (
+                <a href={shoe.videoLink} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-4 bg-gray-900 rounded-2xl border border-gray-800 hover:border-orange-500/50 transition-all group">
+                  <div className="w-12 h-12 rounded-xl bg-red-600/20 flex items-center justify-center text-red-500 shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white font-medium group-hover:text-red-400 transition-colors">ویدیو محصول</p>
+                    <p className="text-xs text-gray-500">تماشا</p>
+                  </div>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* === Related Products === */}
         {relatedShoes.length > 0 && (
           <section className="mt-10 sm:mt-16 pt-8 sm:pt-12 border-t border-[var(--border)]">

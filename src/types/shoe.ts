@@ -18,6 +18,9 @@ export interface Shoe {
   new?: boolean;
   sale?: boolean;
   discount?: number;
+  imageLinks?: string[];
+  podcastLink?: string;
+  videoLink?: string;
 }
 
 export interface CartItem extends Shoe {

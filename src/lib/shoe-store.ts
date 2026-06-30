@@ -90,6 +90,9 @@ export async function addShoe(shoe: Shoe): Promise<void> {
       brand: shoe.brand, rating: shoe.rating, in_stock: shoe.inStock,
       featured: shoe.featured || false, new: shoe.new || false,
       sale: shoe.sale || false, discount: shoe.discount || 0,
+      image_links: shoe.imageLinks ? JSON.stringify(shoe.imageLinks) : null,
+      podcast_link: shoe.podcastLink || null,
+      video_link: shoe.videoLink || null,
     };
     const { error } = await (supabase.from("products") as any).upsert([dbRow], { onConflict: "id" });
     if (error) console.error("Supabase error:", error);
@@ -163,6 +166,9 @@ function mapShoe(d: any): Shoe {
     brand: d.brand, rating: d.rating || 4.0, inStock: d.in_stock,
     featured: d.featured || false, new: d.new || false,
     sale: d.sale || false, discount: d.discount || 0,
+    imageLinks: typeof d.image_links === "string" ? JSON.parse(d.image_links) : (d.image_links || undefined),
+    podcastLink: d.podcast_link || undefined,
+    videoLink: d.video_link || undefined,
   };
 }
 

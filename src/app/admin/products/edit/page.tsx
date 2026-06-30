@@ -19,6 +19,7 @@ function EditForm() {
     price: 890000, description: "", descriptionPersian: "",
     sizes: [40, 41, 42, 43], colors: ["#ffffff"],
     inStock: true, featured: false, new: false, sale: false, discount: 0,
+    imageLinks: "", podcastLink: "", videoLink: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -34,6 +35,7 @@ function EditForm() {
             sizes: shoe.sizes, colors: shoe.colors.map((c) => c.hex),
             inStock: shoe.inStock, featured: shoe.featured || false,
             new: shoe.new || false, sale: shoe.sale || false, discount: shoe.discount || 0,
+            imageLinks: shoe.imageLinks?.join("\n") || "", podcastLink: shoe.podcastLink || "", videoLink: shoe.videoLink || "",
           });
         }
       })();
@@ -47,6 +49,7 @@ function EditForm() {
   const handleSave = async () => {
     if (!form.namePersian || !form.name) return alert("نام محصول را وارد کنید");
     setSaving(true);
+    const imageLinks = form.imageLinks.trim().split("\n").map((l) => l.trim()).filter(Boolean);
     const shoe: Shoe = {
       id: form.id, name: form.name, namePersian: form.namePersian,
       description: form.description || "توضیحاتی وارد نشده",
@@ -60,6 +63,9 @@ function EditForm() {
       brand: form.brand, rating: 4.0, inStock: form.inStock,
       featured: form.featured, new: form.new,
       sale: form.sale, discount: form.sale ? form.discount : undefined,
+      imageLinks: imageLinks.length > 0 ? imageLinks : undefined,
+      podcastLink: form.podcastLink || undefined,
+      videoLink: form.videoLink || undefined,
     };
     await addShoe(shoe);
     setSaving(false);
@@ -142,6 +148,28 @@ function EditForm() {
                 className="w-24 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-orange-500/50" />
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Media Links Section */}
+      <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-4 sm:p-6 mt-6">
+        <h3 className="text-sm font-semibold text-white mb-4">لینک‌های رسانه‌ای</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">لینک تصاویر اضافی</label>
+            <textarea value={form.imageLinks} onChange={(e) => setForm({ ...form, imageLinks: e.target.value })} rows={3} dir="ltr" placeholder="هر لینک در یک خط"
+              className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">لینک پادکست</label>
+            <input value={form.podcastLink} onChange={(e) => setForm({ ...form, podcastLink: e.target.value })} dir="ltr" placeholder="https://..."
+              className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 block mb-1">لینک ویدیو</label>
+            <input value={form.videoLink} onChange={(e) => setForm({ ...form, videoLink: e.target.value })} dir="ltr" placeholder="https://..."
+              className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+          </div>
         </div>
       </div>
 
