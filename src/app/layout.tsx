@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MobileNav from "@/components/MobileNav";
+import ClientWrapper from "@/components/ClientWrapper";
 import { CartProvider } from "@/lib/cart-context";
 
 const vazirmatn = Vazirmatn({
@@ -29,6 +30,7 @@ export default function RootLayout({
           <main className="flex-1 pb-16 sm:pb-0">{children}</main>
           <Footer />
           <MobileNav />
+          <ClientWrapper />
         </CartProvider>
       </body>
     </html>

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import AdminGuard from "@/components/AdminGuard";
+import { logoutAdmin } from "@/lib/auth";
 
 const navItems = [
   { href: "/admin", label: "داشبورد", icon: "📊" },
@@ -13,10 +15,14 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
+  if (path === "/admin/login") return <>{children}</>;
+
   return (
-    <div className="min-h-screen bg-black text-white" dir="rtl">
+    <AdminGuard>
+      <div className="min-h-screen bg-black text-white" dir="rtl">
       <div className="flex">
         <aside className={`fixed top-0 right-0 z-50 h-full w-64 bg-[#0a0a0a] border-l border-gray-800/50 transform transition-all duration-300 ${open ? "translate-x-0" : "translate-x-64"} lg:translate-x-0 lg:static`}>
           <div className="p-6 border-b border-gray-800/50">
@@ -56,6 +62,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link href="/" className="text-sm text-gray-500 hover:text-orange-400 transition-colors">
                   ← بازگشت به سایت
                 </Link>
+                <button onClick={() => { logoutAdmin(); router.push("/admin/login"); }} className="text-sm text-red-500 hover:text-red-400 transition-colors">
+                  خروج
+                </button>
               </div>
             </div>
           </header>
@@ -63,5 +72,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
     </div>
+    </AdminGuard>
   );
 }

@@ -2,17 +2,20 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { shoes } from "@/data/shoes";
+import { shoes as staticShoes } from "@/data/shoes";
 import { categories } from "@/data/shoes";
+import type { Shoe } from "@/types/shoe";
 
 interface Props {
   value: string;
   onChange: (v: string) => void;
   onSelect?: () => void;
   placeholder?: string;
+  products?: Shoe[];
 }
 
-export default function SearchDropdown({ value, onChange, onSelect, placeholder }: Props) {
+export default function SearchDropdown({ value, onChange, onSelect, placeholder, products }: Props) {
+  const shoes = products || staticShoes;
   const [open, setOpen] = useState(false);
   const [highlightIdx, setHighlightIdx] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);

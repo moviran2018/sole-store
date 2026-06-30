@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, total, itemCount } = useCart();
+  const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
 
   if (items.length === 0) {
@@ -25,8 +27,7 @@ export default function CartPage() {
   }
 
   const handleCheckout = () => {
-    setShowConfirm(true);
-    setTimeout(() => { setShowConfirm(false); clearCart(); }, 2000);
+    router.push("/checkout");
   };
 
   return (

@@ -34,10 +34,11 @@ const sizeGuide = [
   { size: "۴۶", us: "11.5", uk: "10.5", cm: "۲۸" },
 ];
 
-export default function ProductDetailContent({ shoe: rawShoe }: { shoe: Shoe }) {
+export default function ProductDetailContent({ shoeId, staticShoe }: { shoeId: string; staticShoe?: Shoe }) {
   const { addItem } = useCart();
-  const [shoe, setShoe] = useState(rawShoe);
+  const [shoe, setShoe] = useState<Shoe | undefined>(staticShoe);
   const [relatedShoes, setRelatedShoes] = useState<Shoe[]>([]);
+  const [shoeLoaded, setShoeLoaded] = useState(!!staticShoe);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
@@ -48,12 +49,34 @@ export default function ProductDetailContent({ shoe: rawShoe }: { shoe: Shoe }) 
 
   useEffect(() => {
     (async () => {
-      const merged = await getShoeById(rawShoe.id);
-      if (merged) setShoe(merged);
+      const merged = await getShoeById(shoeId);
+      if (merged) { setShoe(merged); setShoeLoaded(true); }
       const all = await getAllShoes();
-      setRelatedShoes(all.filter((s) => s.category === (merged?.category || rawShoe.category) && s.id !== (merged?.id || rawShoe.id)).slice(0, 4));
+      setRelatedShoes(all.filter((s) => s.category === (merged?.category || staticShoe?.category) && s.id !== shoeId).slice(0, 4));
     })();
-  }, [rawShoe.id]);
+  }, [shoeId]);
+
+  if (!shoe && shoeLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-16">
+        <div className="text-center">
+          <p className="text-gray-400 text-sm mb-4">محصول مورد نظر یافت نشد.</p>
+          <a href="/" className="text-xs text-[var(--accent)] hover:underline">بازگشت به صفحه اصلی</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!shoe) {
+    return (
+      <div className="min-h-screen flex items-center justify-center pt-16">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">در حال بارگذاری...</p>
+        </div>
+      </div>
+    );
+  }
 
   const displayPrice = shoe.sale && shoe.discount ? shoe.price * (1 - shoe.discount / 100) : shoe.price;
 
