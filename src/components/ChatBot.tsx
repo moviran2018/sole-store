@@ -46,32 +46,37 @@ function makeSystemPrompt(products: Shoe[], knowledgeEntries: KnowledgeEntry[]):
   const catList = [...new Set(products.map((s) => s.categoryPersian))].join(", ");
   const brandList = [...new Set(products.map((s) => s.brand))].join(", ");
 
-  let prompt = `You are SoleBot, the Persian AI assistant for Sole Store.
-You MUST ONLY answer about the store's products, policies, and services. Politely refuse anything else.
+  const catalog = makeProductCatalog(products);
+  const knowledge = buildKnowledgePrompt(knowledgeEntries);
+
+  return `You are SoleBot, a Persian AI assistant for Sole Store shoe shop.
+
+## YOUR JOB
+Answer customer questions ONLY about Sole Store products, policies, and services. Be friendly, concise, and helpful. Always use Persian (fa-IR).
+
+## WHEN ASKED ABOUT PRODUCTS
+Search the product catalog below. Recommend matching products with name, price, and link: /products/{id}. If none match, say you couldn't find an exact match.
 
 ## STORE INFO
-- Product categories: ${catList}
+- Categories: ${catList}
 - Brands: ${brandList}
-- Total products: ${products.length} items
-- Shipping: Free for orders > 2,000,000 تومان, 3-5 days
-- Returns: Within 7 days
-- Payment: Online payment via Zarinpal or test gateway
+- ${products.length} products total
+- Free shipping over 2,000,000 Toman, delivery 3-5 days
+- 7-day return policy
+- Payment: online via Zarinpal
+
+## PRODUCT CATALOG
+${catalog || "No products available."}
+
+## STORE KNOWLEDGE BASE
+${knowledge || "No additional information."}
 
 ## RULES
-1. Answer ONLY about Sole Store products and policies
-2. When recommending a product, ALWAYS include its direct link: /products/{id}
-3. Use Persian (fa-IR) in a friendly tone
-4. Be concise but helpful
-5. If asked something outside store scope, say: "من فقط می‌توانم درباره محصولات و خدمات فروشگاه Sole به شما کمک کنم."
-6. If the user uses profanity or inappropriate language, politely say: "❌ لطفاً محترمانه و در چهارچوب اخلاقی سوال خود را مطرح فرمایید."`;
-
-  const catalog = makeProductCatalog(products);
-  if (catalog) prompt += `\n\n${catalog}`;
-
-  const knowledge = buildKnowledgePrompt(knowledgeEntries);
-  if (knowledge) prompt += `\n\n--- STORE KNOWLEDGE BASE ---\n${knowledge}`;
-
-  return prompt;
+- Persian language only
+- Always include /products/{id} links with product recommendations
+- NEVER make up products or prices. Only use the catalog above.
+- If the customer asks about profanity, respond: "❌ لطفاً محترمانه سوال خود را مطرح کنید."
+- If the question is outside store scope, respond: "من فقط درباره محصولات و خدمات Sole میتونم کمک کنم."`;
 }
 
 interface Props {
@@ -206,6 +211,9 @@ export default function ChatBot({ products }: Props) {
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
   const processUserText = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
 
@@ -221,10 +229,12 @@ export default function ChatBot({ products }: Props) {
 
     if (ai) {
       try {
-        const full = [...messages, { role: "user" as const, text }]
-          .map((m) => `${m.role === "user" ? "مشتری" : "فروشنده"}: ${m.text}`)
-          .join("\n");
-        const reply = await ai.ask(sysPrompt, full);
+        const history = [...messagesRef.current, { role: "user" as const, text }];
+        const chatMessages = history
+          .filter((m) => m.role === "user" || m.role === "bot")
+          .slice(-20)
+          .map((m) => ({ role: m.role === "user" ? "user" as const : "assistant" as const, content: m.text }));
+        const reply = await ai.ask(sysPrompt, chatMessages);
         setMessages((prev) => [...prev, { role: "bot", text: reply }]);
       } catch {
         setMessages((prev) => [...prev, { role: "bot", text: "متأسفانه خطایی رخ داد. لطفاً دوباره تلاش کنید." }]);
@@ -237,7 +247,7 @@ export default function ChatBot({ products }: Props) {
         setLoading(false);
       }, 500);
     }
-  }, [loading, messages, ai, sysPrompt, allProducts, knowledge]);
+  }, [loading, ai, sysPrompt, allProducts, knowledge]);
 
   const handleSend = useCallback(async () => {
     const q = input.trim();

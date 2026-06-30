@@ -1,5 +1,5 @@
 export interface AiClient {
-  ask(system: string, message: string): Promise<string>;
+  ask(system: string, messages: { role: "user" | "assistant"; content: string }[]): Promise<string>;
 }
 
 const apiKey = process.env.NEXT_PUBLIC_AI_API_KEY || "";
@@ -10,17 +10,18 @@ export function getAiClient(): AiClient | null {
   if (!apiKey) return null;
 
   return {
-    async ask(system: string, message: string): Promise<string> {
+    async ask(system: string, messages: { role: "user" | "assistant"; content: string }[]): Promise<string> {
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
         body: JSON.stringify({
           model: aiModel,
+          temperature: 0.3,
+          max_tokens: 1024,
           messages: [
             { role: "system", content: system },
-            { role: "user", content: message },
+            ...messages,
           ],
-          max_tokens: 512,
         }),
       });
       const data = await res.json();
