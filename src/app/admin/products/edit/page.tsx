@@ -2,9 +2,15 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getShoeById, addShoe, categories } from "@/lib/shoe-store";
+import { getShoeById, addShoe, getAllShoes, categories } from "@/lib/shoe-store";
 import { shoeSvg } from "@/data/shoes";
 import type { Shoe } from "@/types/shoe";
+
+const catPrefix: Record<string, string> = {
+  sneakers: "snk", formal: "frm", running: "run", casual: "csl",
+  boots: "bt", sandals: "snd", loafers: "lf", slides: "sld",
+  heels: "hl", sport: "spt",
+};
 
 const brands = ["Nike", "Adidas", "Puma", "New Balance", "Reebok", "Vans", "Asics", "Converse", "Under Armour", "Fila", "Mizuno", "Timberland", "Saucony", "Diadora", "Li-Ning", "Clarks", "Loake", "Barker", "Hush Puppies", "Florsheim", "Church's", "Allen Edmonds", "Sanders", "Ecco", "Magnanni", "Brooks", "Salomon", "Hoka", "Skechers", "Geox", "FitFlop", "Dr. Martens", "Toms", "Birkenstock", "Sanuk", "Merrell", "Blundstone", "Red Wing", "Sorel", "Columbia", "CAT", "Wolverine", "Reef", "Teva", "Rainbow", "Havaianas", "Chaco", "Xero", "Olukai", "G.H. Bass", "Tod's", "Alden", "Cole Haan", "Salvatore Ferragamo", "Hogan", "Gucci", "Jimmy Choo", "Christian Louboutin", "Sam Edelman", "Manolo Blahnik", "Steve Madden", "Stuart Weitzman", "Giuseppe Zanotti", "Nine West", "Tory Burch", "Kate Spade", "Wilson", "Lululemon"];
 
@@ -23,6 +29,17 @@ function EditForm() {
   });
   const [saving, setSaving] = useState(false);
 
+  async function generateId(category: string): Promise<string> {
+    const prefix = catPrefix[category] || "gen";
+    const all = await getAllShoes();
+    let max = 0;
+    for (const s of all) {
+      const m = s.id.match(new RegExp(`^${prefix}-(\\d+)$`));
+      if (m) max = Math.max(max, parseInt(m[1]));
+    }
+    return `${prefix}-${String(max + 1).padStart(3, "0")}`;
+  }
+
   useEffect(() => {
     if (id) {
       (async () => {
@@ -39,10 +56,14 @@ function EditForm() {
           });
         }
       })();
-    } else {
-      setForm((f) => ({ ...f, id: `cust-${Date.now().toString(36)}` }));
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!id) {
+      generateId(form.category).then((newId) => setForm((f) => ({ ...f, id: newId })));
+    }
+  }, [form.category, id]);
 
   const cat = categories.find((c) => c.id === form.category);
 
@@ -77,6 +98,15 @@ function EditForm() {
       <div className="mb-6">
         <span className="text-orange-400 font-semibold text-sm">—— {isNew ? "محصول جدید" : "ویرایش محصول"} ——</span>
         <h1 className="text-2xl font-bold text-white mt-1">{isNew ? "افزودن محصول جدید" : `ویرایش: ${form.namePersian}`}</h1>
+      </div>
+
+      <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-4 mb-6 flex items-center gap-4">
+        <span className="text-sm text-gray-400">کد محصول:</span>
+        <code className="text-orange-400 font-mono text-lg font-bold ltr">{form.id}</code>
+        <button onClick={() => navigator.clipboard.writeText(form.id)}
+          className="text-xs text-gray-500 hover:text-orange-400 transition-colors" title="کپی کد">
+          📋 کپی
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
