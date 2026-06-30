@@ -77,6 +77,69 @@ interface Props {
   products: Shoe[];
 }
 
+/** Hook: returns a start/stop voice recorder using the Web Speech API */
+function useVoiceRecognition() {
+  const recognitionRef = useRef<any>(null);
+  const [recording, setRecording] = useState(false);
+  const [supported, setSupported] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = (window as any).SpeechRecognition
+      || (window as any).webkitSpeechRecognition
+      || (window as any).mozSpeechRecognition
+      || (window as any).msSpeechRecognition;
+    if (!SpeechRecognition) setSupported(false);
+  }, []);
+
+  const startListening = useCallback((onResult: (text: string) => void, onError?: () => void) => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = (window as any).SpeechRecognition
+      || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "fa-IR";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    let finalText = "";
+
+    recognition.onresult = (event: any) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalText += event.results[i][0].transcript + " ";
+        }
+      }
+    };
+
+    recognition.onerror = () => {
+      setRecording(false);
+      onError?.();
+    };
+
+    recognition.onend = () => {
+      setRecording(false);
+      if (finalText.trim()) onResult(finalText.trim());
+    };
+
+    recognitionRef.current = recognition;
+    setRecording(true);
+    recognition.start();
+  }, []);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch { }
+      recognitionRef.current = null;
+    }
+    setRecording(false);
+  }, []);
+
+  return { recording, supported, startListening, stopListening };
+}
+
 export default function ChatBot({ products }: Props) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -88,8 +151,10 @@ export default function ChatBot({ products }: Props) {
   const [knowledge, setKnowledge] = useState<KnowledgeEntry[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const micHoldRef = useRef(false);
 
   const ai = getAiClient();
+  const { recording, supported: voiceSupported, startListening, stopListening } = useVoiceRecognition();
 
   // Load fresh data on mount
   useEffect(() => {
@@ -107,16 +172,14 @@ export default function ChatBot({ products }: Props) {
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
-  const handleSend = useCallback(async () => {
-    const q = input.trim();
-    if (!q || loading) return;
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: q }]);
+  const processUserText = useCallback(async (text: string) => {
+    if (!text.trim() || loading) return;
+    setMessages((prev) => [...prev, { role: "user", text }]);
     setLoading(true);
 
     if (ai) {
       try {
-        const full = [...messages, { role: "user" as const, text: q }]
+        const full = [...messages, { role: "user" as const, text }]
           .map((m) => `${m.role === "user" ? "مشتری" : "فروشنده"}: ${m.text}`)
           .join("\n");
         const reply = await ai.ask(sysPrompt, full);
@@ -128,11 +191,44 @@ export default function ChatBot({ products }: Props) {
       }
     } else {
       setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: botReply(q, allProducts, knowledge) }]);
+        setMessages((prev) => [...prev, { role: "bot", text: botReply(text, allProducts, knowledge) }]);
         setLoading(false);
       }, 500);
     }
-  }, [input, loading, messages, ai, sysPrompt, allProducts, knowledge]);
+  }, [loading, messages, ai, sysPrompt, allProducts, knowledge]);
+
+  const handleSend = useCallback(async () => {
+    const q = input.trim();
+    if (!q || loading) return;
+    setInput("");
+    await processUserText(q);
+  }, [input, loading, processUserText]);
+
+  const handleVoiceResult = useCallback(async (text: string) => {
+    setInput("");
+    await processUserText(text);
+  }, [processUserText]);
+
+  const handleVoiceError = useCallback(() => {
+    setMessages((prev) => [...prev, { role: "bot", text: "متأسفانه میکروفون در دسترس نیست. لطفاً متن سوال را تایپ کنید." }]);
+  }, []);
+
+  const handleMicPointerDown = useCallback(() => {
+    micHoldRef.current = true;
+    startListening(handleVoiceResult, handleVoiceError);
+  }, [startListening, handleVoiceResult, handleVoiceError]);
+
+  const handleMicPointerUp = useCallback(() => {
+    if (micHoldRef.current) {
+      micHoldRef.current = false;
+      stopListening();
+    }
+  }, [stopListening]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => { stopListening(); };
+  }, [stopListening]);
 
   return (
     <>
@@ -190,6 +286,30 @@ export default function ChatBot({ products }: Props) {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="سوال خود را بپرسید..." dir="rtl"
               className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-orange-500/50 transition-all" />
+
+            {voiceSupported && (
+              <button
+                onMouseDown={handleMicPointerDown}
+                onMouseUp={handleMicPointerUp}
+                onMouseLeave={handleMicPointerUp}
+                onTouchStart={handleMicPointerDown}
+                onTouchEnd={handleMicPointerUp}
+                disabled={loading}
+                className={`relative w-10 h-10 rounded-xl grid place-items-center transition-all shrink-0 ${
+                  recording
+                    ? "bg-red-600 text-white shadow-lg shadow-red-600/50"
+                    : "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white border border-gray-700"
+                } disabled:opacity-30 disabled:cursor-not-allowed`}
+                title="برای صحبت کردن نگه دارید">
+                {recording && (
+                  <span className="absolute inset-0 rounded-xl animate-ping bg-red-500/30" />
+                )}
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 relative z-10 ${recording ? "animate-pulse" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                </svg>
+              </button>
+            )}
+
             <button onClick={handleSend} disabled={!input.trim() || loading}
               className="w-10 h-10 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-30 disabled:cursor-not-allowed text-white grid place-items-center transition-all shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
