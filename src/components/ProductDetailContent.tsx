@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { shoes } from "@/data/shoes";
 import { useCart } from "@/lib/cart-context";
+import { getShoeById, getAllShoes } from "@/lib/shoe-store";
 import ShoeCard from "@/components/ShoeCard";
 import type { Shoe } from "@/types/shoe";
 
@@ -34,8 +34,10 @@ const sizeGuide = [
   { size: "۴۶", us: "11.5", uk: "10.5", cm: "۲۸" },
 ];
 
-export default function ProductDetailContent({ shoe }: { shoe: Shoe }) {
+export default function ProductDetailContent({ shoe: rawShoe }: { shoe: Shoe }) {
   const { addItem } = useCart();
+  const [shoe, setShoe] = useState(rawShoe);
+  const [relatedShoes, setRelatedShoes] = useState<Shoe[]>([]);
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
@@ -44,7 +46,15 @@ export default function ProductDetailContent({ shoe }: { shoe: Shoe }) {
   const [added, setAdded] = useState(false);
   const [imgError, setImgError] = useState<Set<string>>(new Set());
 
-  const relatedShoes = shoes.filter((s) => s.category === shoe.category && s.id !== shoe.id).slice(0, 4);
+  useEffect(() => {
+    (async () => {
+      const merged = await getShoeById(rawShoe.id);
+      if (merged) setShoe(merged);
+      const all = await getAllShoes();
+      setRelatedShoes(all.filter((s) => s.category === (merged?.category || rawShoe.category) && s.id !== (merged?.id || rawShoe.id)).slice(0, 4));
+    })();
+  }, [rawShoe.id]);
+
   const displayPrice = shoe.sale && shoe.discount ? shoe.price * (1 - shoe.discount / 100) : shoe.price;
 
   const handleAdd = () => {

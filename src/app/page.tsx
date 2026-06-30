@@ -4,11 +4,12 @@ import { useState, useMemo, useEffect } from "react";
 import ShoeCard from "@/components/ShoeCard";
 import HeroSlider from "@/components/HeroSlider";
 import SearchDropdown from "@/components/SearchDropdown";
-import { shoes, categories } from "@/data/shoes";
+import { shoes as staticShoes, categories } from "@/data/shoes";
+import { getAllShoes } from "@/lib/shoe-store";
 
-const ALL_BRANDS = [...new Set(shoes.map((s) => s.brand))].sort();
-const PRICE_MIN = Math.min(...shoes.map((s) => s.price));
-const PRICE_MAX = Math.max(...shoes.map((s) => s.price));
+const ALL_BRANDS = [...new Set(staticShoes.map((s) => s.brand))].sort();
+const PRICE_MIN = Math.min(...staticShoes.map((s) => s.price));
+const PRICE_MAX = Math.max(...staticShoes.map((s) => s.price));
 const ALL_SIZES = [38, 39, 40, 41, 42, 43, 44, 45, 46];
 const ALL_COLORS = [
   { name: "مشکی", hex: "#000000" },
@@ -21,7 +22,7 @@ const ALL_COLORS = [
   { name: "بژ", hex: "#F5F5DC" },
 ];
 
-function useFilters() {
+function useFilters(displayShoes: typeof staticShoes) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
@@ -42,7 +43,7 @@ function useFilters() {
   const [inStockOnly, setInStockOnly] = useState(false);
 
   const filtered = useMemo(() => {
-    let result = [...shoes];
+    let result = [...displayShoes];
 
     if (activeCategory !== "all") {
       result = result.filter((s) => s.category === activeCategory);
@@ -95,7 +96,7 @@ function useFilters() {
     }
 
     return result;
-  }, [searchQuery, activeCategory, selectedBrands, priceRange, minRating, selectedColors, selectedSizes, saleOnly, inStockOnly, sortBy]);
+  }, [displayShoes, searchQuery, activeCategory, selectedBrands, priceRange, minRating, selectedColors, selectedSizes, saleOnly, inStockOnly, sortBy]);
 
   const toggleBrand = (brand: string) => {
     setSelectedBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
@@ -135,7 +136,7 @@ function useFilters() {
     inStockOnly
   );
 
-  const catCount = (catId: string) => (catId === "all" ? shoes.length : shoes.filter((s) => s.category === catId).length);
+  const catCount = (catId: string) => (catId === "all" ? displayShoes.length : displayShoes.filter((s) => s.category === catId).length);
 
   return {
     searchQuery, setSearchQuery,
@@ -350,6 +351,10 @@ function FilterSidebar({
 }
 
 export default function Home() {
+  const [shoes, setShoes] = useState(staticShoes);
+
+  useEffect(() => { getAllShoes().then(setShoes); }, []);
+
   const {
     searchQuery, setSearchQuery,
     activeCategory, setActiveCategory,
@@ -363,7 +368,7 @@ export default function Home() {
     inStockOnly, setInStockOnly,
     clearAll, hasActiveFilters,
     filtered, catCount,
-  } = useFilters();
+  } = useFilters(shoes);
 
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
