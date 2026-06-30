@@ -229,6 +229,17 @@ function renderMessage(text: string): React.ReactNode {
       if (/\.(mp4|webm|mov|avi|mkv)$/i.test(ext)) {
         return <video key={i} controls className="max-w-full h-auto rounded-lg my-1" src={url} />;
       }
+      if (/docs\.google\.com\/(document|spreadsheets|presentation|forms)\//i.test(url)) {
+        const label = url.includes("document") ? "📄 Google Docs" : url.includes("spreadsheets") ? "📊 Google Sheets" : url.includes("presentation") ? "📽 Google Slides" : "📋 Google Forms";
+        return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline text-xs block my-1">{label}</a>;
+      }
+      if (/drive\.google\.com\//i.test(url)) {
+        return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline text-xs block my-1">☁️ Google Drive</a>;
+      }
+      if (/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|csv|txt)$/i.test(ext)) {
+        const icon = ext === "pdf" ? "📕" : ext.startsWith("doc") ? "📝" : ext.startsWith("xls") ? "📊" : ext.startsWith("ppt") ? "📽" : "📄";
+        return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs block my-1">{icon} {ext.toUpperCase()}</a>;
+      }
       return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline text-xs">{url}</a>;
     }
     return <span key={i}>{part}</span>;
@@ -248,6 +259,8 @@ function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = [])
         if (entry.media.imageLinks.length) reply += "\n\n" + entry.media.imageLinks.join("\n");
         if (entry.media.audioLinks.length) reply += "\n\n" + entry.media.audioLinks.join("\n");
         if (entry.media.videoLinks.length) reply += "\n\n" + entry.media.videoLinks.join("\n");
+        if (entry.media.documentLinks.length) reply += "\n\n" + entry.media.documentLinks.join("\n");
+        if (entry.media.driveLinks.length) reply += "\n\n" + entry.media.driveLinks.join("\n");
       }
       return reply;
     }

@@ -15,11 +15,11 @@ export default function KnowledgePage() {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<KnowledgeEntry | null>(null);
-  const [form, setForm] = useState({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "" });
+  const [form, setForm] = useState({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "", documentLinks: "", driveLinks: "" });
 
   useEffect(() => { getKnowledgeBase().then(setEntries); }, []);
 
-  const resetForm = () => setForm({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "" });
+  const resetForm = () => setForm({ title: "", content: "", type: "faq", tags: "", imageLinks: "", audioLinks: "", videoLinks: "", documentLinks: "", driveLinks: "" });
 
   const handleEdit = (e: KnowledgeEntry) => {
     setEditing(e);
@@ -28,6 +28,8 @@ export default function KnowledgePage() {
       imageLinks: e.media?.imageLinks?.join("\n") || "",
       audioLinks: e.media?.audioLinks?.join("\n") || "",
       videoLinks: e.media?.videoLinks?.join("\n") || "",
+      documentLinks: e.media?.documentLinks?.join("\n") || "",
+      driveLinks: e.media?.driveLinks?.join("\n") || "",
     });
     setShowForm(true);
   };
@@ -40,8 +42,10 @@ export default function KnowledgePage() {
     const imageLinks = parseLinks(form.imageLinks);
     const audioLinks = parseLinks(form.audioLinks);
     const videoLinks = parseLinks(form.videoLinks);
-    const media: KnowledgeMedia | undefined = (imageLinks.length || audioLinks.length || videoLinks.length)
-      ? { imageLinks, audioLinks, videoLinks }
+    const documentLinks = parseLinks(form.documentLinks);
+    const driveLinks = parseLinks(form.driveLinks);
+    const media: KnowledgeMedia | undefined = (imageLinks.length || audioLinks.length || videoLinks.length || documentLinks.length || driveLinks.length)
+      ? { imageLinks, audioLinks, videoLinks, documentLinks, driveLinks }
       : undefined;
 
     const entry: KnowledgeEntry = {
@@ -109,21 +113,34 @@ export default function KnowledgePage() {
           </div>
 
           {/* Media Links */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-gray-800/50">
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">لینک تصاویر (هر لینک یک خط)</label>
-              <textarea value={form.imageLinks} onChange={(e) => setForm({ ...form, imageLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://example.com/image1.jpg"
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">لینک صدا (هر لینک یک خط)</label>
-              <textarea value={form.audioLinks} onChange={(e) => setForm({ ...form, audioLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://example.com/audio.mp3"
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">لینک ویدیو (هر لینک یک خط)</label>
-              <textarea value={form.videoLinks} onChange={(e) => setForm({ ...form, videoLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://example.com/video.mp4"
-                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+          <div className="pt-2 border-t border-gray-800/50">
+            <p className="text-xs text-gray-500 mb-3">لینک‌های رسانه (هر لینک یک خط)</p>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">تصاویر</label>
+                <textarea value={form.imageLinks} onChange={(e) => setForm({ ...form, imageLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">صدا</label>
+                <textarea value={form.audioLinks} onChange={(e) => setForm({ ...form, audioLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">ویدیو</label>
+                <textarea value={form.videoLinks} onChange={(e) => setForm({ ...form, videoLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">فایل‌ها (PDF, DOC, Excel)</label>
+                <textarea value={form.documentLinks} onChange={(e) => setForm({ ...form, documentLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://drive.google.com/..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Google Docs / Sheets / Drive</label>
+                <textarea value={form.driveLinks} onChange={(e) => setForm({ ...form, driveLinks: e.target.value })} rows={4} dir="ltr" placeholder="https://docs.google.com/..."
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-orange-500/50" />
+              </div>
             </div>
           </div>
 
@@ -151,11 +168,13 @@ export default function KnowledgePage() {
                     {e.tags.map((t) => <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-500">{t}</span>)}
                   </div>
                 )}
-                {e.media && (e.media.imageLinks.length > 0 || e.media.audioLinks.length > 0 || e.media.videoLinks.length > 0) && (
+                {e.media && (e.media.imageLinks.length > 0 || e.media.audioLinks.length > 0 || e.media.videoLinks.length > 0 || e.media.documentLinks.length > 0 || e.media.driveLinks.length > 0) && (
                   <div className="flex gap-2 mt-2 flex-wrap">
                     {e.media.imageLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-900/30 text-blue-400">🖼 {e.media.imageLinks.length} تصویر</span>}
                     {e.media.audioLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-green-900/30 text-green-400">🎵 {e.media.audioLinks.length} صدا</span>}
                     {e.media.videoLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-900/30 text-red-400">🎬 {e.media.videoLinks.length} ویدیو</span>}
+                    {e.media.documentLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-900/30 text-purple-400">📄 {e.media.documentLinks.length} فایل</span>}
+                    {e.media.driveLinks.length > 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-900/30 text-yellow-400">☁️ {e.media.driveLinks.length} Drive</span>}
                   </div>
                 )}
               </div>

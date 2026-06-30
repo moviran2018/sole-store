@@ -4,6 +4,8 @@ export interface KnowledgeMedia {
   imageLinks: string[];
   audioLinks: string[];
   videoLinks: string[];
+  documentLinks: string[];
+  driveLinks: string[];
 }
 
 export interface KnowledgeEntry {
@@ -95,6 +97,8 @@ export function buildKnowledgePrompt(entries: KnowledgeEntry[]): string {
       if (e.media.imageLinks.length) text += `\nImages: ${e.media.imageLinks.join(", ")}`;
       if (e.media.audioLinks.length) text += `\nAudio: ${e.media.audioLinks.join(", ")}`;
       if (e.media.videoLinks.length) text += `\nVideos: ${e.media.videoLinks.join(", ")}`;
+      if (e.media.documentLinks.length) text += `\nDocuments: ${e.media.documentLinks.join(", ")}`;
+      if (e.media.driveLinks.length) text += `\nDrive: ${e.media.driveLinks.join(", ")}`;
     }
     return text;
   }).join("\n\n");
