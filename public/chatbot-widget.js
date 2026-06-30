@@ -89,42 +89,53 @@
     input.onkeydown = (e) => { if (e.key === "Enter") sendMsg(); };
     send.onclick = sendMsg;
 
-    let recorder = null, chunks = [];
-    function startRec() {
-      if (recorder) return;
-      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        chunks = [];
-        recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-        recorder.onstop = () => {
-          stream.getTracks().forEach((t) => t.stop());
-          mic.classList.remove("recording");
-          const blob = new Blob(chunks, { type: "audio/webm" });
-          if (blob.size < 1000) return;
-          addMessage("user", "🎤 (پیام صوتی در حال پردازش...)");
-          showLoading();
-          const fd = new FormData();
-          fd.append("audio", blob, "recording.webm");
-          fetch(WORKER_URL + "/transcribe", { method: "POST", body: fd })
-            .then((r) => r.json()).then((d) => {
-              hideLoading();
-              const txt = d.text || "";
-              if (!txt) return;
-              document.getElementById("cb-messages").lastElementChild?.remove();
-              sendMsgText(txt);
-            }).catch(() => { hideLoading(); });
-        };
-        recorder.start();
-        mic.classList.add("recording");
-      }).catch(() => {});
-    }
-    function stopRec() { if (recorder && recorder.state !== "inactive") { recorder.stop(); recorder = null; } }
+    let recognition = null, recording = false;
 
-    mic.addEventListener("mousedown", startRec);
-    mic.addEventListener("mouseup", stopRec);
-    mic.addEventListener("mouseleave", stopRec);
-    mic.addEventListener("touchstart", (e) => { e.preventDefault(); startRec(); });
-    mic.addEventListener("touchend", (e) => { e.preventDefault(); stopRec(); });
+    function useBrowserSpeech() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      return !!SpeechRecognition;
+    }
+
+    function startVoice() {
+      if (recording) return;
+      recording = true;
+      mic.classList.add("recording");
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = "fa-IR";
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        recognition.onresult = (e) => {
+          const txt = e.results[0][0].transcript;
+          if (txt) sendMsgText(txt);
+          cleanupVoice();
+        };
+        recognition.onerror = () => { cleanupVoice(); };
+        recognition.onend = () => { cleanupVoice(); };
+        recognition.start();
+      } else {
+        cleanupVoice();
+        alert("مرورگر شما از تشخیص صدای خودکار پشتیبانی نمی‌کند.");
+      }
+    }
+
+    function stopVoice() {
+      if (recognition) { try { recognition.stop(); } catch (e) {} recognition = null; }
+      cleanupVoice();
+    }
+
+    function cleanupVoice() {
+      recording = false;
+      mic.classList.remove("recording");
+    }
+
+    mic.addEventListener("mousedown", startVoice);
+    mic.addEventListener("mouseup", stopVoice);
+    mic.addEventListener("mouseleave", stopVoice);
+    mic.addEventListener("touchstart", (e) => { e.preventDefault(); startVoice(); });
+    mic.addEventListener("touchend", (e) => { e.preventDefault(); stopVoice(); });
 
     return { btn, panel, close, input, send, msgs, mic };
   }
@@ -137,10 +148,13 @@
 
   function formatText(text) {
     let html = escHtml(text);
+    html = html.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    html = html.replace(/\*(.+?)\*/g, "<i>$1</i>");
+    html = html.replace(/\n/g, "<br>");
+    html = html.replace(/📦/g, "");
+    html = html.replace(/🔗/g, "");
+    html = html.replace(/https?:\/\/[^\s<]+/g, (url) => `<a href="${url}" target="_blank">${url}</a>`);
     html = html.replace(/\/products\/([\w-]+)/g, '<a href="/products/$1">🔗 مشاهده محصول</a>');
-    html = html.replace(/https?:\/\/[^\s<)]+/g, (u) => `<a href="${u}" target="_blank">${u}</a>`);
-    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    html = html.replace(/\n/g, "<br/>");
     return html;
   }
 
@@ -228,15 +242,12 @@
     if (!products || !products.length) return "در حال بارگذاری اطلاعات فروشگاه... لطفاً کمی صبر کنید.";
 
     const matched = products.filter((p) => {
-      if (query.includes((p.namePersian || "").toLowerCase())) return true;
-      if (query.includes((p.name || "").toLowerCase())) return true;
-      if (query.includes((p.brand || "").toLowerCase())) return true;
-      const aliases = brandAliases[(p.brand || "").toLowerCase()];
-      return aliases && aliases.some((a) => query.includes(a));
-    }).slice(0, 3);
+      const name = ((p.namePersian || p.name) + " " + (p.brand || "") + " " + (p.category || "")).toLowerCase();
+      return brandAliases[query] ? brandAliases[query].some((a) => name.includes(a)) : name.includes(query);
+    });
 
     if (matched.length) {
-      return matched.map((p) =>
+      return "محصولات مرتبط:\n" + matched.slice(0, 5).map((p) =>
         `**${p.namePersian || p.name}** (${p.brand}) - ${(p.price || 0).toLocaleString("fa-IR")} تومان\nبرای مشاهده: /products/${p.id}`
       ).join("\n\n");
     }
