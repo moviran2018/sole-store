@@ -6,7 +6,7 @@ import { getMessages } from "@/lib/shoe-store";
 export default function MessagesPage() {
   const [messages, setMessages] = useState<any[]>([]);
 
-  useEffect(() => { setMessages(getMessages()); }, []);
+  useEffect(() => { (async () => setMessages(await getMessages()))(); }, []);
 
   return (
     <div className="p-4 lg:p-8">

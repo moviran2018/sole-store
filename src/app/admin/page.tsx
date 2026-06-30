@@ -8,17 +8,19 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, revenue: 0, brands: 0, lowStock: 0 });
 
   useEffect(() => {
-    const products = getAllShoes();
-    const orders = getOrders();
-    const brands = new Set(products.map((p) => p.brand));
-    const revenue = orders.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + (o.total || 0), 0);
-    setStats({
-      products: products.length,
-      orders: orders.length,
-      revenue,
-      brands: brands.size,
-      lowStock: products.filter((p) => !p.inStock).length,
-    });
+    (async () => {
+      const products = await getAllShoes();
+      const orders = await getOrders();
+      const brands = new Set(products.map((p) => p.brand));
+      const revenue = orders.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + (o.total || 0), 0);
+      setStats({
+        products: products.length,
+        orders: orders.length,
+        revenue,
+        brands: brands.size,
+        lowStock: products.filter((p) => !p.inStock).length,
+      });
+    })();
   }, []);
 
   const cards = [

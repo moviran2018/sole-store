@@ -7,9 +7,9 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.email || !form.message) return alert("لطفاً تمام فیلدها را پر کنید");
-    saveMessage({ ...form, createdAt: new Date().toLocaleString("fa-IR") });
+    await saveMessage({ ...form, createdAt: new Date().toLocaleString("fa-IR") });
     setSent(true);
     setForm({ name: "", email: "", subject: "", message: "" });
     setTimeout(() => setSent(false), 3000);

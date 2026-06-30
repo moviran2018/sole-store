@@ -9,16 +9,16 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Shoe[]>([]);
   const [search, setSearch] = useState("");
 
-  useEffect(() => { setProducts(getAllShoes()); }, []);
+  useEffect(() => { (async () => setProducts(await getAllShoes()))(); }, []);
 
   const filtered = products.filter((p) =>
     p.namePersian.includes(search) || p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (confirm(`حذف "${name}"؟`)) {
-      deleteShoe(id);
-      setProducts(getAllShoes());
+      await deleteShoe(id);
+      setProducts(await getAllShoes());
     }
   };
 

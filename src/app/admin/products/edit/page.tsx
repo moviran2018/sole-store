@@ -24,17 +24,19 @@ function EditForm() {
 
   useEffect(() => {
     if (id) {
-      const shoe = getShoeById(id);
-      if (shoe) {
-        setForm({
-          id: shoe.id, name: shoe.name, namePersian: shoe.namePersian,
-          brand: shoe.brand, category: shoe.category, price: shoe.price,
-          description: shoe.description, descriptionPersian: shoe.descriptionPersian,
-          sizes: shoe.sizes, colors: shoe.colors.map((c) => c.hex),
-          inStock: shoe.inStock, featured: shoe.featured || false,
-          new: shoe.new || false, sale: shoe.sale || false, discount: shoe.discount || 0,
-        });
-      }
+      (async () => {
+        const shoe = await getShoeById(id);
+        if (shoe) {
+          setForm({
+            id: shoe.id, name: shoe.name, namePersian: shoe.namePersian,
+            brand: shoe.brand, category: shoe.category, price: shoe.price,
+            description: shoe.description, descriptionPersian: shoe.descriptionPersian,
+            sizes: shoe.sizes, colors: shoe.colors.map((c) => c.hex),
+            inStock: shoe.inStock, featured: shoe.featured || false,
+            new: shoe.new || false, sale: shoe.sale || false, discount: shoe.discount || 0,
+          });
+        }
+      })();
     } else {
       setForm((f) => ({ ...f, id: `cust-${Date.now().toString(36)}` }));
     }
@@ -42,7 +44,7 @@ function EditForm() {
 
   const cat = categories.find((c) => c.id === form.category);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.namePersian || !form.name) return alert("نام محصول را وارد کنید");
     setSaving(true);
     const shoe: Shoe = {
@@ -59,7 +61,7 @@ function EditForm() {
       featured: form.featured, new: form.new,
       sale: form.sale, discount: form.sale ? form.discount : undefined,
     };
-    addShoe(shoe);
+    await addShoe(shoe);
     setSaving(false);
     router.push("/admin/products");
   };

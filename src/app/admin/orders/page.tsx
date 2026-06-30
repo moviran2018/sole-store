@@ -9,11 +9,11 @@ const statusColors: Record<string, string> = { pending: "bg-yellow-500/20 text-y
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
 
-  useEffect(() => { setOrders(getOrders()); }, []);
+  useEffect(() => { (async () => setOrders(await getOrders()))(); }, []);
 
-  const handleStatus = (id: string, status: string) => {
-    updateOrderStatus(id, status);
-    setOrders(getOrders());
+  const handleStatus = async (id: string, status: string) => {
+    await updateOrderStatus(id, status);
+    setOrders(await getOrders());
   };
 
   return (
