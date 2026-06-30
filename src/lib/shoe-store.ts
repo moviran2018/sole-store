@@ -37,15 +37,17 @@ export async function getAllShoes(): Promise<Shoe[]> {
 
   // 3. Supabase products (if configured)
   if (isSupabaseConfigured()) {
-    const supabase = getSupabase();
-    if (supabase) {
-      const { data } = await (supabase.from("products") as any).select("*");
-      if (data) {
-        for (const d of data) {
-          merged.set(d.id, mapShoe(d));
+    try {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data } = await (supabase.from("products") as any).select("*");
+        if (data) {
+          for (const d of data) {
+            merged.set(d.id, mapShoe(d));
+          }
         }
       }
-    }
+    } catch { /* supabase unavailable – fall back to static + localStorage */ }
   }
 
   return Array.from(merged.values());
@@ -54,11 +56,13 @@ export async function getAllShoes(): Promise<Shoe[]> {
 export async function getShoeById(id: string): Promise<Shoe | undefined> {
   // 1. Check Supabase first (most authoritative)
   if (isSupabaseConfigured()) {
-    const supabase = getSupabase();
-    if (supabase) {
-      const { data } = await (supabase.from("products") as any).select("*").eq("id", id).single();
-      if (data) return mapShoe(data);
-    }
+    try {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data } = await (supabase.from("products") as any).select("*").eq("id", id).single();
+        if (data) return mapShoe(data);
+      }
+    } catch { /* fall through */ }
   }
 
   // 2. Check custom products
@@ -108,7 +112,7 @@ export async function deleteShoe(id: string): Promise<void> {
 
   // Remove from Supabase (if configured)
   if (isSupabaseConfigured()) {
-    await (getSupabase()!.from("products") as any).delete().eq("id", id);
+    try { await (getSupabase()!.from("products") as any).delete().eq("id", id); } catch { }
   }
 }
 

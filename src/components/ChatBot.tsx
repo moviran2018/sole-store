@@ -2,27 +2,33 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getAiClient, hasAiConfigured } from "@/lib/ai-client";
+import { getKnowledgeBase, buildKnowledgePrompt } from "@/lib/knowledge";
 import type { Shoe } from "@/types/shoe";
+import type { KnowledgeEntry } from "@/lib/knowledge";
 
 interface Message {
   role: "user" | "bot";
   text: string;
 }
 
-function makeProductKnowledge(products: Shoe[]): string {
+function makeSystemPrompt(products: Shoe[], knowledgeEntries: KnowledgeEntry[]): string {
   const cats = [...new Set(products.map((s) => s.categoryPersian))];
   const brands = [...new Set(products.map((s) => s.brand))];
   const minP = Math.min(...products.map((s) => s.price));
   const maxP = Math.max(...products.map((s) => s.price));
-  return `You are a helpful Persian-speaking shoe store assistant for "Sole Store" (فروشگاه Sole).
-Answer ONLY about the store's products. If asked about anything else, politely say you can only help with store products.
-Our product range: ${cats.join(", ")}.
+
+  let prompt = `You are a Persian-speaking shoe store assistant for "Sole Store" (فروشگاه Sole).
+CRITICAL: Answer ONLY about the store's products and policies. If asked about anything else, politely refuse.
+Product range: ${cats.join(", ")}.
 Brands: ${brands.join(", ")}.
 Price range: ${minP.toLocaleString("fa-IR")} to ${maxP.toLocaleString("fa-IR")} تومان.
 Total products: ${products.length}.
-We ship across Iran, free shipping for orders above 2,000,000 تومان.
-Returns accepted within 7 days.
-Be brief, friendly, and helpful. Use Persian (fa-IR).`;
+Use Persian (fa-IR). Be brief, friendly, and helpful.`;
+
+  const knowledge = buildKnowledgePrompt(knowledgeEntries);
+  if (knowledge) prompt += `\n\n--- STORE KNOWLEDGE BASE ---\n${knowledge}`;
+
+  return prompt;
 }
 
 interface Props {
@@ -36,11 +42,15 @@ export default function ChatBot({ products }: Props) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [knowledge, setKnowledge] = useState<KnowledgeEntry[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const ai = getAiClient();
-  const sysPrompt = makeProductKnowledge(products);
+
+  useEffect(() => { getKnowledgeBase().then(setKnowledge); }, []);
+
+  const sysPrompt = makeSystemPrompt(products, knowledge);
 
   useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -71,7 +81,7 @@ export default function ChatBot({ products }: Props) {
       }
     } else {
       setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: botReply(q, products) }]);
+        setMessages((prev) => [...prev, { role: "bot", text: botReply(q, products, knowledge) }]);
         setLoading(false);
       }, 500);
     }
@@ -157,27 +167,18 @@ export default function ChatBot({ products }: Props) {
 }
 
 /* ── Fallback rule-based reply (when no AI configured) ── */
-function botReply(q: string, products: Shoe[]): string {
+function botReply(q: string, products: Shoe[], knowledge: KnowledgeEntry[] = []): string {
   const query = q.toLowerCase();
+
+  // Check knowledge base first
+  for (const entry of knowledge) {
+    const tags = entry.tags.map((t) => t.toLowerCase());
+    const match = tags.some((t) => query.includes(t)) || query.includes(entry.title.toLowerCase());
+    if (match) return entry.content;
+  }
 
   if (/سلام|درود|خوبی|hello|hi/i.test(query)) {
     return "سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمکتان کنم؟ 😊";
-  }
-
-  if (/ساعت کار|ساعات کاری|زمان|وقت/i.test(query)) {
-    return "فروشگاه ما به صورت ۲۴ ساعته و آنلاین فعال است. سفارشات شما در روزهای کاری (شنبه تا پنجشنبه) پردازش می‌شوند.";
-  }
-
-  if (/ارسال|حمل|پست|تحویل/i.test(query)) {
-    return "ارسال به سراسر ایران:\n• پست پیشتاز: ۳ تا ۵ روز کاری\n• تیپاکس: ۲ تا ۳ روز کاری\n• سفارش‌های بالای ۲ میلیون تومان: رایگان 🚚";
-  }
-
-  if (/بازگشت|عودت|مرجوع|پس دادن/i.test(query)) {
-    return "شما تا ۷ روز پس از دریافت کالا فرصت دارید در صورت عدم رضایت، محصول را بازگردانید. کالا باید در بسته‌بندی اصلی و بدون استفاده باشد.";
-  }
-
-  if (/ضمانت|اصالت|گارانتی/i.test(query)) {
-    return "همه محصولات Sole Store دارای ضمانت اصالت کالا بوده و مستقیماً از برندهای معتبر تهیه می‌شوند. ✅";
   }
 
   if (/قیمت|قیمتها|ارزان|گران/i.test(query)) {
