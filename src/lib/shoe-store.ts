@@ -23,13 +23,11 @@ export async function getAllShoes(): Promise<Shoe[]> {
     const s = getSupabase();
     if (s) {
       const { data } = await (s.from("products") as any).select("*").order("created_at");
-      if (data && data.length > 0) {
-        return data.map(mapShoe);
-      }
+      if (data && data.length > 0) return data.map(mapShoe);
     }
   }
-  const custom = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []);
   const removed = new Set(lsGet<string[]>(ADMIN_REMOVED_KEY, []));
+  const custom = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []);
   return [...staticShoes.filter((s) => !removed.has(s.id)), ...custom];
 }
 
@@ -47,6 +45,7 @@ export async function getShoeById(id: string): Promise<Shoe | undefined> {
 
 export async function addShoe(shoe: Shoe): Promise<void> {
   if (isSupabaseConfigured()) {
+    const s = getSupabase()!;
     const dbRow = {
       id: shoe.id, name: shoe.name, name_persian: shoe.namePersian,
       description: shoe.description, description_persian: shoe.descriptionPersian,
@@ -57,7 +56,6 @@ export async function addShoe(shoe: Shoe): Promise<void> {
       featured: shoe.featured || false, new: shoe.new || false,
       sale: shoe.sale || false, discount: shoe.discount || 0,
     };
-    const s = getSupabase()!;
     const { error } = await (s.from("products") as any).upsert([dbRow], { onConflict: "id" });
     if (error) console.error("Supabase error:", error);
     return;
@@ -76,8 +74,7 @@ export async function deleteShoe(id: string): Promise<void> {
   const removed = lsGet<string[]>(ADMIN_REMOVED_KEY, []);
   removed.push(id);
   lsSet(ADMIN_REMOVED_KEY, removed);
-  const products = lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []).filter((p) => p.id !== id);
-  lsSet(ADMIN_PRODUCTS_KEY, products);
+  lsSet(ADMIN_PRODUCTS_KEY, lsGet<Shoe[]>(ADMIN_PRODUCTS_KEY, []).filter((p) => p.id !== id));
 }
 
 export async function getOrders(): Promise<any[]> {
@@ -90,8 +87,7 @@ export async function getOrders(): Promise<any[]> {
 
 export async function saveOrder(order: any): Promise<void> {
   if (isSupabaseConfigured()) {
-    const { error } = await (getSupabase()!.from("orders") as any).upsert([{ ...order, items: JSON.stringify(order.items) }], { onConflict: "id" });
-    if (error) console.error("Supabase error:", error);
+    await (getSupabase()!.from("orders") as any).upsert([{ ...order, items: JSON.stringify(order.items) }], { onConflict: "id" });
     return;
   }
   const orders = lsGet<any[]>(ADMIN_ORDERS_KEY, []);
@@ -134,7 +130,7 @@ function mapShoe(d: any): Shoe {
     description: d.description || "", descriptionPersian: d.description_persian || "",
     price: d.price, category: d.category, categoryPersian: d.category_persian || d.category,
     sizes: d.sizes || [], colors: typeof d.colors === "string" ? JSON.parse(d.colors) : (d.colors || []),
-    image: d.image, images: d.images || [],
+    image: d.image, images: typeof d.images === "string" ? JSON.parse(d.images) : (d.images || []),
     brand: d.brand, rating: d.rating || 4.0, inStock: d.in_stock,
     featured: d.featured || false, new: d.new || false,
     sale: d.sale || false, discount: d.discount || 0,

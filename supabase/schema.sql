@@ -1,7 +1,6 @@
--- Run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/_/sql)
--- This creates all tables needed for Sole Store
+-- Run this in your Supabase SQL Editor
+-- Create all tables for Sole Store
 
--- Products table
 CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -14,7 +13,7 @@ CREATE TABLE IF NOT EXISTS products (
   sizes INTEGER[] DEFAULT '{40,41,42,43}',
   colors JSONB DEFAULT '[]',
   image TEXT DEFAULT '',
-  images TEXT[] DEFAULT '{}',
+  images JSONB DEFAULT '[]',
   brand TEXT NOT NULL DEFAULT '',
   rating REAL DEFAULT 4.0,
   in_stock BOOLEAN DEFAULT true,
@@ -25,7 +24,6 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Orders table
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   customer_name TEXT NOT NULL DEFAULT '',
@@ -39,7 +37,6 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Messages table
 CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '',
@@ -49,12 +46,10 @@ CREATE TABLE IF NOT EXISTS messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable Row Level Security
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 
--- Allow public read/write for all tables (development mode)
 CREATE POLICY "public_all" ON products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "public_all" ON orders FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "public_all" ON messages FOR ALL USING (true) WITH CHECK (true);
