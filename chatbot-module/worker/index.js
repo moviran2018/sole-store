@@ -79,10 +79,6 @@ async function handleChat(request) {
     const { message, history, provider, knowledgeUrl } = await request.json();
     if (!message?.trim()) return json({ error: "message is required" }, 400);
 
-    const p = (provider || "gemini").toUpperCase();
-    const apiKey = p === "GEMINI" ? GEMINI_API_KEY : p === "GROQ" ? AI_API_KEY_GROQ : p === "OPENAI" ? AI_API_KEY_OPENAI : AI_API_KEY_CLAUDE;
-    if (!apiKey) return json({ error: `API key for ${p} not configured` }, 500);
-
     const docContent = await getKnowledge(
       knowledgeUrl || (typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null)
     );
@@ -100,69 +96,54 @@ async function handleChat(request) {
     }
 
     const his = (history || []).slice(-10);
-    const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
-    let reply;
+    let reply = "";
 
-    const body = {
-      model: "llama3-8b-8192",
-      messages,
-      temperature: 0.5,
-      max_tokens: 400,
-      frequency_penalty: 0.3,
-      presence_penalty: 0.2,
-    };
-
-    if (p === "GEMINI") {
-      const geminiContents = [
+    async function tryGemini(key) {
+      const contents = [
         { role: "user", parts: [{ text: sys + "\n\nOk? Reply with: 'باشه، متوجه شدم.'" }] },
         { role: "model", parts: [{ text: "باشه، متوجه شدم." }] },
       ];
-      for (const m of his) geminiContents.push({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] });
-      geminiContents.push({ role: "user", parts: [{ text: message }] });
-      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=" + apiKey, {
+      for (const m of his) contents.push({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] });
+      contents.push({ role: "user", parts: [{ text: message }] });
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=" + key, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: geminiContents, generationConfig: { temperature: 0.1, maxOutputTokens: 800 } }),
+        body: JSON.stringify({ contents, generationConfig: { temperature: 0.1, maxOutputTokens: 800 } }),
       });
-      if (!res.ok) throw new Error(`Gemini error (${res.status}): ${await res.text().catch(() => "")}`);
-      const geminiResp = await res.json();
-      const parts = geminiResp.candidates?.[0]?.content?.parts || [];
-      reply = parts.filter(p => !p.thought).map(p => p.text).join("\n").trim();
-      if (!reply) {
+      if (res.status === 429) return null;
+      if (!res.ok) return null;
+      const data = await res.json();
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      let r = parts.filter(p => !p.thought).map(p => p.text).join("\n").trim();
+      if (!r) {
         const lines = parts.map(p => p.text).join("\n").split("\n").filter(l => l.trim());
-        reply = lines.filter(l => l.match(/[\u0600-\u06FF]/) && !l.match(/^\s*[*\-\d.]/)).pop() || lines.pop() || "";
+        r = lines.filter(l => l.match(/[\u0600-\u06FF]/) && !l.match(/^\s*[*\-\d.]/)).pop() || lines.pop() || "";
       }
-    } else if (p === "GROQ") {
+      return r || null;
+    }
+
+    async function tryGroq(apiKey) {
+      const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ model: "llama3-8b-8192", messages, temperature: 0.5, max_tokens: 400 }),
       });
-      if (!res.ok) throw new Error(`Groq error (${res.status}): ${await res.text().catch(() => "")}`);
-      reply = (await res.json()).choices?.[0]?.message?.content || "";
-    } else if (p === "OPENAI") {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "gpt-4o-mini", ...body }),
-      });
-      if (!res.ok) throw new Error(`OpenAI error (${res.status}): ${await res.text().catch(() => "")}`);
-      reply = (await res.json()).choices?.[0]?.message?.content || "";
-    } else if (p === "CLAUDE") {
-      const sysMsg = messages.find((m) => m.role === "system")?.content || "";
-      const chatMsgs = messages.filter((m) => m.role !== "system").map((m) => ({
-        role: m.role === "assistant" ? "assistant" : "user", content: m.content,
-      }));
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-3-haiku-20240307", system: sysMsg, messages: chatMsgs, max_tokens: 600 }),
-      });
-      if (!res.ok) throw new Error(`Claude error (${res.status}): ${await res.text().catch(() => "")}`);
-      reply = (await res.json()).content?.[0]?.text || "";
+      if (res.status === 429 || !res.ok) return null;
+      return (await res.json()).choices?.[0]?.message?.content || null;
     }
 
-    return json({ reply });
+    const preferred = (provider || "gemini").toUpperCase();
+
+    if (preferred === "GEMINI" || preferred === "AUTO") {
+      if (GEMINI_API_KEY) reply = await tryGemini(GEMINI_API_KEY);
+      if (!reply && AI_API_KEY_GROQ) reply = await tryGroq(AI_API_KEY_GROQ);
+    } else if (preferred === "GROQ") {
+      if (AI_API_KEY_GROQ) reply = await tryGroq(AI_API_KEY_GROQ);
+      if (!reply && GEMINI_API_KEY) reply = await tryGemini(GEMINI_API_KEY);
+    }
+
+    return json({ reply: reply || "" });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
