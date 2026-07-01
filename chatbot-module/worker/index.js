@@ -87,16 +87,17 @@ async function handleChat(request) {
       knowledgeUrl || (typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null)
     );
 
-    let sys = "You are SoleBot, a Persian AI assistant for Sole Store (online shoe store). " +
-      "CRITICAL RULES:\n" +
-      "- Answer ONLY in Persian.\n" +
-      "- If the answer is NOT in the provided data, say exactly: 'اطلاعاتی در این مورد ندارم.'\n" +
-      "- NEVER make up or guess information.\n" +
-      "- Keep answers short and precise.\n" +
-      "- Stay on topic. If asked unrelated questions, say: 'فقط در مورد محصولات فروشگاه می‌توانم کمک کنم.'\n" +
-      "- Format professionally using markdown.";
+    let sys = "تو SoleBot هستی، دستیار کفش فروشی.\n" +
+      "سلام: سلام! چطور می‌توانم کمک کنم؟\n" +
+      "تشکر: خواهش می‌کنم. سوال دیگه‌ای دارید؟\n" +
+      "چیز دیگه: فقط در مورد محصولات فروشگاه می‌توانم کمک کنم.\n" +
+      "نمیدونم: اطلاعاتی در این مورد ندارم.\n" +
+      "کوتاه جواب بده. از **bold** و `code` استفاده کن.";
 
-    if (docContent) sys += "\n\n## STORE DATA & INSTRUCTIONS\n" + docContent.slice(0, 6000);
+    if (docContent) {
+      const facts = docContent.replace(/قوانین[\s\S]*?:/g, "").replace(/دانشنامه.*?\n/, "").slice(0, 2000);
+      sys += "\n\nحقایق فروشگاه:\n" + facts;
+    }
 
     const his = (history || []).slice(-10);
     const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
@@ -112,18 +113,25 @@ async function handleChat(request) {
     };
 
     if (p === "GEMINI") {
-      const geminiContents = [];
+      const geminiContents = [
+        { role: "user", parts: [{ text: sys + "\n\nOk? Reply with: 'باشه، متوجه شدم.'" }] },
+        { role: "model", parts: [{ text: "باشه، متوجه شدم." }] },
+      ];
       for (const m of his) geminiContents.push({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] });
       geminiContents.push({ role: "user", parts: [{ text: message }] });
       const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=" + apiKey, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: geminiContents, systemInstruction: { parts: [{ text: sys }] }, generationConfig: { temperature: 0.5, maxOutputTokens: 400 } }),
+        body: JSON.stringify({ contents: geminiContents, generationConfig: { temperature: 0.1, maxOutputTokens: 800 } }),
       });
       if (!res.ok) throw new Error(`Gemini error (${res.status}): ${await res.text().catch(() => "")}`);
       const geminiResp = await res.json();
       const parts = geminiResp.candidates?.[0]?.content?.parts || [];
-      reply = parts.filter(p => !p.thought).pop()?.text || parts[0]?.text || "";
+      reply = parts.filter(p => !p.thought).map(p => p.text).join("\n").trim();
+      if (!reply) {
+        const lines = parts.map(p => p.text).join("\n").split("\n").filter(l => l.trim());
+        reply = lines.filter(l => l.match(/[\u0600-\u06FF]/) && !l.match(/^\s*[*\-\d.]/)).pop() || lines.pop() || "";
+      }
     } else if (p === "GROQ") {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
