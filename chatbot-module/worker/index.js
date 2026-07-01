@@ -87,12 +87,12 @@ async function handleChat(request) {
       knowledgeUrl || (typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null)
     );
 
-    let sys = "You are SoleBot, a Persian AI assistant for Sole Store (online shoe store). " +
-      "Answer concisely in Persian using ONLY the provided data. " +
-      "If the answer is not in the data, say exactly: 'اطلاعاتی در این مورد ندارم.' " +
-      "DO NOT repeat yourself. DO NOT make up information.";
-
-    if (docContent) sys += "\n\n## STORE INFO\n" + docContent.slice(0, 3000);
+    let sys = docContent
+      ? docContent.slice(0, 8000)
+      : "You are SoleBot, a Persian AI assistant for Sole Store (online shoe store). " +
+        "Answer concisely in Persian using ONLY the provided data. " +
+        "If the answer is not in the data, say exactly: 'اطلاعاتی در این مورد ندارم.' " +
+        "DO NOT repeat yourself. DO NOT make up information.";
 
     const his = (history || []).slice(-10);
     const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
