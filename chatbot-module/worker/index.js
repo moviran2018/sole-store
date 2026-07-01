@@ -8,7 +8,7 @@ async function getKnowledge(url) {
   if (!url) return null;
   if (cache.knowledge && cache.time > Date.now() - 60000) return cache.knowledge;
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { redirect: "follow" });
     const text = await res.text();
     cache.knowledge = text;
     cache.time = Date.now();
@@ -25,7 +25,9 @@ async function handleRequest(request) {
   if (url.pathname === "/chat" && request.method === "POST") return handleChat(request);
 
   if (url.pathname === "/knowledge" && request.method === "GET") {
-    return json({ knowledgeUrl: typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null });
+    const docUrl = typeof KNOWLEDGE_URL !== "undefined" ? KNOWLEDGE_URL : null;
+    const content = docUrl ? await getKnowledge(docUrl) : null;
+    return json({ knowledgeUrl: docUrl, content: content ? content.slice(0, 8000) : null });
   }
 
   if (url.pathname === "/transcribe" && request.method === "POST") return handleTranscribe(request);

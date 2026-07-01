@@ -2,5 +2,5 @@ name = "sole-chatbot"
 main = "worker/index.js"
 compatibility_date = "2025-04-01"
 
-[env.production.vars]
+[vars]
 KNOWLEDGE_URL = "https://docs.google.com/document/d/19sB0sOggtZq0CnhHsU4fMvNAAtdR9dG_ftIqJ2qExM0/export?format=txt"

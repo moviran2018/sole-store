@@ -271,6 +271,13 @@
       underarmour: ["آندرآرمور"],
     };
 
+    let fallbackText = "سوال شما رو متوجه نشدم. می‌توانم درباره محصولات، برندها و قیمت‌ها کمک کنم.";
+
+    if (knowledge && knowledge.length > 50) {
+      const match = knowledge.split("\n").filter(l => l.includes(":") || l.includes(query)).slice(0, 3);
+      if (match.length) return match.join("\n");
+    }
+
     if (!products || !products.length) return "در حال بارگذاری اطلاعات فروشگاه... لطفاً کمی صبر کنید.";
 
     const matched = products.filter((p) => {
@@ -284,16 +291,20 @@
       ).join("\n\n");
     }
 
-    return "سوال شما رو متوجه نشدم. می‌توانم درباره محصولات، برندها و قیمت‌ها کمک کنم.";
+    if (knowledge && knowledge.length > 50) return knowledge.slice(0, 300);
+    return fallbackText;
   }
 
   function loadKnowledge(url) {
     return fetch(url).then((r) => r.json()).then((data) => {
       state.products = data.products || [];
-      state.knowledge = data.knowledge || [];
     }).catch(() => {});
   }
 
   const kbUrl = SCRIPT?.getAttribute("data-knowledge");
   if (kbUrl) loadKnowledge(kbUrl);
+
+  fetch(WORKER_URL + "/knowledge").then(r => r.json()).then(d => {
+    if (d.content) state.knowledge = d.content;
+  }).catch(() => {});
 })();

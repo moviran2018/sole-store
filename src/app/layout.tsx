@@ -37,7 +37,7 @@ export default function RootLayout({
             data-title="SoleBot"
             data-welcome="سلام! به فروشگاه Sole خوش آمدید. چطور می‌توانم کمک کنم؟"
             data-knowledge="/sole-store/data/products.json"
-            data-knowledge-url=""
+            data-knowledge-url="https://docs.google.com/document/d/19sB0sOggtZq0CnhHsU4fMvNAAtdR9dG_ftIqJ2qExM0/export?format=txt"
             defer
           ></script>
         </CartProvider>
