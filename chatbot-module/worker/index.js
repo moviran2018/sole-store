@@ -96,6 +96,7 @@ async function handleChat(request) {
     }
 
     const his = (history || []).slice(-10);
+    const msgs = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
     let reply = "";
 
     async function tryGemini(key) {
@@ -110,8 +111,7 @@ async function handleChat(request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents, generationConfig: { temperature: 0.1, maxOutputTokens: 800 } }),
       });
-      if (res.status === 429) return null;
-      if (!res.ok) return null;
+      if (res.status === 429 || !res.ok) return null;
       const data = await res.json();
       const parts = data.candidates?.[0]?.content?.parts || [];
       let r = parts.filter(p => !p.thought).map(p => p.text).join("\n").trim();
@@ -122,25 +122,41 @@ async function handleChat(request) {
       return r || null;
     }
 
+    async function tryOpenRouter(apiKey) {
+      const models = ["google/gemma-4-26b-a4b-it:free", "google/gemma-4-31b-it:free", "meta-llama/llama-3.3-70b-instruct:free"];
+      for (const model of models) {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({ model, messages: msgs, max_tokens: 400, temperature: 0.3 }),
+        });
+        if (!res.ok) continue;
+        const text = (await res.json()).choices?.[0]?.message?.content || "";
+        if (text.trim()) return text.trim();
+      }
+      return null;
+    }
+
     async function tryGroq(apiKey) {
-      const messages = [{ role: "system", content: sys }, ...his, { role: "user", content: message }];
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: "llama3-8b-8192", messages, temperature: 0.5, max_tokens: 400 }),
+        body: JSON.stringify({ model: "llama3-8b-8192", messages: msgs, temperature: 0.5, max_tokens: 400 }),
       });
       if (res.status === 429 || !res.ok) return null;
       return (await res.json()).choices?.[0]?.message?.content || null;
     }
 
     const preferred = (provider || "gemini").toUpperCase();
+    const chain = preferred === "GROQ"
+      ? ["tryGroq", "tryOpenRouter", "tryGemini"]
+      : ["tryGemini", "tryOpenRouter", "tryGroq"];
 
-    if (preferred === "GEMINI" || preferred === "AUTO") {
-      if (GEMINI_API_KEY) reply = await tryGemini(GEMINI_API_KEY);
-      if (!reply && AI_API_KEY_GROQ) reply = await tryGroq(AI_API_KEY_GROQ);
-    } else if (preferred === "GROQ") {
-      if (AI_API_KEY_GROQ) reply = await tryGroq(AI_API_KEY_GROQ);
-      if (!reply && GEMINI_API_KEY) reply = await tryGemini(GEMINI_API_KEY);
+    const funcs = { tryGemini, tryOpenRouter, tryGroq };
+    const keys = { tryGemini: GEMINI_API_KEY, tryOpenRouter: OPENROUTER_API_KEY, tryGroq: AI_API_KEY_GROQ };
+
+    for (const name of chain) {
+      if (keys[name]) { reply = await funcs[name](keys[name]); if (reply) break; }
     }
 
     return json({ reply: reply || "" });
