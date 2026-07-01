@@ -148,13 +148,45 @@
 
   function formatText(text) {
     let html = escHtml(text);
+    html = html.replace(/📦/g, "").replace(/🔗/g, "");
+    html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+    html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+    html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+    html = html.replace(/^&gt; (.+)$/gm, "<blockquote>$1</blockquote>");
+    html = html.replace(/^-{3,}\s*$/gm, "<hr>");
+    html = html.replace(/^`{3}[\s\S]*?`{3}$/gm, (m) => {
+      const code = m.replace(/^`{3}\w*\n?/, "").replace(/`{3}$/, "");
+      return "<pre><code>" + code + "</code></pre>";
+    });
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/^(\d+)\. (.+)$/gm, (m, n, li) => "</li><li>" + li);
+    html = html.replace(/^[*-] (.+)$/gm, (m, li) => "</li><li>" + li);
+    html = html.replace(/(<(?:li|h[12]3|blockquote)[^>]*>)/g, "__BLOCK__$1");
+    html = html.split("__BLOCK__").map((seg) => {
+      if (seg.startsWith("<li")) return seg.replace(/<\/li>/, "") + "</li>";
+      return seg;
+    }).join("");
+    html = html.replace(/__BLOCK__/g, "");
+    html = html.replace(/(?:<\/li>){2,}/g, "</li>");
+    html = html.replace(/(<li>.*?<\/li>)/gs, (m) => {
+      const items = m.match(/<li>.*?<\/li>/g);
+      return items ? "<ul>" + items.join("") + "</ul>" : m;
+    });
+    html = html.replace(/\|(.+?)\|/g, (m) => {
+      const cells = m.split("|").filter(Boolean).map((c) => "<td>" + c.trim() + "</td>").join("");
+      return "<tr>" + cells + "</tr>";
+    });
+    html = html.replace(/(<tr>.*?<\/tr>)+/g, "<table>$&</table>");
     html = html.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     html = html.replace(/\*(.+?)\*/g, "<i>$1</i>");
-    html = html.replace(/\n/g, "<br>");
-    html = html.replace(/📦/g, "");
-    html = html.replace(/🔗/g, "");
     html = html.replace(/https?:\/\/[^\s<]+/g, (url) => `<a href="${url}" target="_blank">${url}</a>`);
     html = html.replace(/\/products\/([\w-]+)/g, '<a href="/products/$1">🔗 مشاهده محصول</a>');
+    html = html.replace(/\n/g, "<br>");
+    html = html.replace(/(<(?:ul|ol|table|pre|blockquote|h[12]3|hr)[^>]*>)/g, "<br>$1");
+    html = html.replace(/(<\/(?:ul|ol|table|pre|blockquote|h[12]3)>)/g, "$1<br>");
+    html = html.replace(/(<br\s*\/?>\s*){3,}/g, "<br><br>");
+    html = html.replace(/<br><\/(li|tr|td|th)>/g, "</$1>");
+    html = html.replace(/<(li|tr|td|th)><br>/g, "<$1>");
     return html;
   }
 
