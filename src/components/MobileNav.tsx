@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { usePathname } from "next/navigation";
 
@@ -17,10 +18,18 @@ const items = [
 export default function MobileNav() {
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const [hasHash, setHasHash] = useState(false);
+
+  useEffect(() => {
+    setHasHash(!!window.location.hash);
+    const onHash = () => setHasHash(!!window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   const isActive = (item: typeof items[number]) => {
-    if (item.href === "/") return pathname === "/";
-    if (item.href === "products") return pathname === "/products" || (pathname === "/" && !!window.location.hash);
+    if (item.href === "/") return pathname === "/" && !hasHash;
+    if (item.href === "products") return pathname === "/products" || (pathname === "/" && hasHash);
     return pathname === item.href;
   };
 
@@ -28,15 +37,15 @@ export default function MobileNav() {
     if (item.href === "products") {
       if (pathname === "/") {
         document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+        window.location.hash = "products";
       } else {
         window.location.href = "/#products";
       }
       return;
     }
     if (item.href === "/") {
-      if (pathname === "/") {
+      if (pathname === "/" && !hasHash) {
         window.scrollTo({ top: 0, behavior: "smooth" });
-        window.history.replaceState(null, "", "/");
       } else {
         window.location.href = "/";
       }

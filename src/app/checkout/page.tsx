@@ -33,7 +33,7 @@ export default function CheckoutPage() {
       amount: total,
       orderId,
       description: `سفارش ${orderId} - ${itemCount} کالا`,
-      callbackUrl: `${window.location.origin}/checkout/callback?orderId=${orderId}`,
+      callbackUrl: `/checkout/callback?orderId=${orderId}`,
     });
 
     if (result.success && result.redirectUrl) {
