@@ -12,6 +12,7 @@ const vazirmatn = Vazirmatn({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://moviran2018.github.io/sole-store"),
   title: "Sole Store | فروشگاه کفش مدرن",
   description: "فروشگاه تخصصی کفش با بهترین برندهای دنیا. کیفیت، راحتی و استایل را با هم تجربه کنید.",
 };
