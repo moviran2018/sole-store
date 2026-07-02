@@ -395,7 +395,7 @@ export default function Home() {
       <HeroSlider products={shoes} />
 
       {/* Mobile category chips */}
-      <div className="md:hidden">
+      <div className="md:hidden overflow-hidden">
         <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
           <div className="flex gap-2 py-3">
             <button onClick={() => setActiveCategory("all")}
@@ -431,9 +431,11 @@ export default function Home() {
             </div>
           </div>
           {/* Mobile: horizontal scroll */}
-          <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
-            <div className="flex gap-3">
-              {featured.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+          <div className="md:hidden overflow-hidden">
+            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+              <div className="flex gap-3">
+                {featured.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+              </div>
             </div>
           </div>
           {/* Desktop: grid */}
@@ -452,9 +454,11 @@ export default function Home() {
             </div>
           </div>
           {/* Mobile: horizontal scroll */}
-          <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
-            <div className="flex gap-3">
-              {newArrivals.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+          <div className="md:hidden overflow-hidden">
+            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+              <div className="flex gap-3">
+                {newArrivals.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+              </div>
             </div>
           </div>
           {/* Desktop: grid */}
@@ -473,9 +477,11 @@ export default function Home() {
             </div>
           </div>
           {/* Mobile: horizontal scroll */}
-          <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
-            <div className="flex gap-3">
-              {saleItems.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+          <div className="md:hidden overflow-hidden">
+            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+              <div className="flex gap-3">
+                {saleItems.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+              </div>
             </div>
           </div>
           {/* Desktop: grid */}
