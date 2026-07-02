@@ -28,22 +28,21 @@ export default function MobileNav() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
-
   const handleHome = (e: React.MouseEvent) => {
     if (pathname === "/") {
       e.preventDefault();
-      scrollToTop();
-      window.history.replaceState(null, "", "/");
       setHash("");
+      window.history.replaceState(null, "", "/");
+      window.scrollTo(0, 0);
     }
   };
 
   const handleProducts = (e: React.MouseEvent) => {
     if (pathname === "/") {
       e.preventDefault();
-      document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
       window.location.hash = "products";
+      setHash("#products");
+      document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
     }
   };
 

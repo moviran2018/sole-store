@@ -1,6 +1,38 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    setHash(window.location.hash);
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const handleHome = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      setHash("");
+      window.history.replaceState(null, "", "/");
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleProducts = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.location.hash = "products";
+      setHash("#products");
+      document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <footer className="bg-[#050505] border-t border-[var(--border)] mt-20">
       <div className="glow-line mx-auto max-w-7xl" />
@@ -8,8 +40,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-lg font-bold text-gradient">SOLE</span>
-              <span className="text-[10px] text-gray-600 font-light tracking-[0.2em] uppercase">STORE</span>
+              <Link href="/" onClick={handleHome} className="flex items-center gap-2">
+                <span className="text-lg font-bold text-gradient">SOLE</span>
+                <span className="text-[10px] text-gray-600 font-light tracking-[0.2em] uppercase">STORE</span>
+              </Link>
             </div>
             <p className="text-sm text-gray-500 leading-relaxed">
               فروشگاه تخصصی کفش با بهترین برندهای دنیا. کیفیت، راحتی و استایل را با هم تجربه کنید.
@@ -19,8 +53,8 @@ export default function Footer() {
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">دسترسی سریع</h3>
             <div className="flex flex-col gap-2">
-              <Link href="/" className="text-sm text-gray-500 hover:text-[var(--accent)] transition-colors">خانه</Link>
-              <Link href="/#products" className="text-sm text-gray-500 hover:text-[var(--accent)] transition-colors">محصولات</Link>
+              <Link href="/" onClick={handleHome} className="text-sm text-gray-500 hover:text-[var(--accent)] transition-colors">خانه</Link>
+              <Link href="/#products" onClick={handleProducts} className="text-sm text-gray-500 hover:text-[var(--accent)] transition-colors">محصولات</Link>
               <Link href="/about" className="text-sm text-gray-500 hover:text-[var(--accent)] transition-colors">درباره ما</Link>
               <Link href="/contact" className="text-sm text-gray-500 hover:text-[var(--accent)] transition-colors">تماس</Link>
             </div>

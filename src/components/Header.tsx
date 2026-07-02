@@ -1,25 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import SearchDropdown from "@/components/SearchDropdown";
 
 export default function Header() {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
   const { itemCount } = useCart();
 
+  useEffect(() => {
+    setHash(window.location.hash);
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
   const closeSearch = () => { setSearchOpen(false); setSearchVal(""); };
+
+  const handleHome = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      setHash("");
+      window.history.replaceState(null, "", "/");
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleProducts = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.location.hash = "products";
+      setHash("#products");
+      document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          <Link href="/" onClick={(e) => { if (pathname === "/") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); window.history.replaceState(null, "", "/"); } }} className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
+          <Link href="/" onClick={handleHome} className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <span className="text-lg sm:text-xl font-bold text-gradient">SOLE</span>
             <span className="text-[9px] sm:text-[10px] text-gray-500 font-light tracking-[0.2em] uppercase">STORE</span>
           </Link>
@@ -33,8 +59,8 @@ export default function Header() {
           </div>
 
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            <Link href="/" className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">خانه</Link>
-            <Link href="/#products" className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">محصولات</Link>
+            <Link href="/" onClick={handleHome} className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">خانه</Link>
+            <Link href="/#products" onClick={handleProducts} className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">محصولات</Link>
             <Link href="/about" className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">درباره ما</Link>
             <Link href="/contact" className="text-sm text-gray-400 hover:text-[var(--accent)] transition-colors tracking-wide">تماس</Link>
           </nav>
@@ -79,11 +105,11 @@ export default function Header() {
         {/* Mobile fullscreen menu */}
         {menuOpen && (
           <div className="md:hidden fixed inset-0 top-14 bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center gap-8">
-            <Link href="/" className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors" onClick={() => setMenuOpen(false)}>خانه</Link>
-            <Link href="/#products" className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors" onClick={() => setMenuOpen(false)}>محصولات</Link>
-            <Link href="/about" className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors" onClick={() => setMenuOpen(false)}>درباره ما</Link>
-            <Link href="/contact" className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors" onClick={() => setMenuOpen(false)}>تماس</Link>
-            <Link href="/cart" className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors" onClick={() => setMenuOpen(false)}>
+            <Link href="/" onClick={(e) => { handleHome(e); setMenuOpen(false); }} className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors">خانه</Link>
+            <Link href="/#products" onClick={(e) => { handleProducts(e); setMenuOpen(false); }} className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors">محصولات</Link>
+            <Link href="/about" onClick={() => setMenuOpen(false)} className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors">درباره ما</Link>
+            <Link href="/contact" onClick={() => setMenuOpen(false)} className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors">تماس</Link>
+            <Link href="/cart" onClick={() => setMenuOpen(false)} className="text-2xl text-gray-300 hover:text-[var(--accent)] transition-colors">
               سبد خرید {itemCount > 0 && `(${itemCount})`}
             </Link>
           </div>
