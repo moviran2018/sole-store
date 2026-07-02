@@ -20,6 +20,10 @@
 #cb-container *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,'Segoe UI',Tahoma,sans-serif;direction:rtl}
 #cb-btn{position:fixed;bottom:20px;left:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:999999;display:flex;align-items:center;justify-content:center;font-size:26px;transition:transform .2s}
 #cb-btn:hover{transform:scale(1.08)}
+#cb-status{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;border:2px solid #1a1a2e;transition:background .3s}
+#cb-status.ok{background:#22c55e}
+#cb-status.err{background:#ef4444}
+#cb-status.na{background:#6b7280}
 #cb-panel{position:fixed;bottom:90px;left:20px;width:380px;max-height:600px;height:70vh;background:#1a1a2e;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.5);z-index:999998;display:none;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 #cb-panel.open{display:flex}
 #cb-header{padding:14px 18px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;flex-shrink:0}
@@ -47,7 +51,7 @@
 #cb-send:disabled{opacity:.4;cursor:default}
 #cb-mic.recording{background:#ef4444;animation:cb-pulse .8s infinite}
 @keyframes cb-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-@media(max-width:480px){#cb-panel{left:10px;right:10px;width:auto;bottom:80px;height:75vh}}
+@media(max-width:480px){#cb-panel{left:10px;right:10px;width:auto;bottom:80px;height:75vh}#cb-btn{bottom:76px}}
 `;
 
   function injectStyles() {
@@ -59,8 +63,9 @@
   function createDOM() {
     const container = document.createElement("div");
     container.id = "cb-container";
+    const uiSettings = (() => { try { return JSON.parse(localStorage.getItem("sole_ui_settings") || "{}"); } catch { return {}; } })();
     container.innerHTML = `
-      <button id="cb-btn" aria-label="Chat">💬</button>
+      <button id="cb-btn" aria-label="Chat" style="${uiSettings.showChatbot === false ? "display:none" : ""}">💬<span id="cb-status" class="na"></span></button>
       <div id="cb-panel">
         <div id="cb-header">
           <span>🤖 ${escHtml(TITLE)}</span>
@@ -88,6 +93,16 @@
     input.oninput = () => { send.disabled = !input.value.trim(); };
     input.onkeydown = (e) => { if (e.key === "Enter") sendMsg(); };
     send.onclick = sendMsg;
+
+    const statusDot = document.getElementById("cb-status");
+    const uiShowAi = uiSettings.showAiStatus !== false;
+    if (statusDot && uiShowAi) {
+      fetch(WORKER_URL + "/health").then(r => r.json()).then(d => {
+        statusDot.className = d.ok ? "ok" : "err";
+      }).catch(() => { statusDot.className = "err"; });
+    } else if (statusDot) {
+      statusDot.style.display = "none";
+    }
 
     let recognition = null, recording = false;
 

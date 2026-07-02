@@ -20,7 +20,7 @@ async function handleRequest(request) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders() });
 
   const url = new URL(request.url);
-  if (url.pathname === "/health") return json({ ok: true, keySet: !!AI_API_KEY_GROQ });
+  if (url.pathname === "/health") return json({ ok: !!(GEMINI_API_KEY || OPENROUTER_API_KEY || AI_API_KEY_GROQ) });
 
   if (url.pathname === "/chat" && request.method === "POST") return handleChat(request);
 

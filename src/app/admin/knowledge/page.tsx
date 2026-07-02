@@ -20,6 +20,20 @@ export default function KnowledgePage() {
   const [sysPrompt, setSysPrompt] = useState("");
   const [sysPromptOpen, setSysPromptOpen] = useState(false);
   const [sysPromptSaving, setSysPromptSaving] = useState(false);
+  const [uiSettings, setUiSettings] = useState({ showChatbot: true, showAiStatus: true });
+  const [uiOpen, setUiOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("sole_ui_settings") || "{}");
+      setUiSettings({ showChatbot: stored.showChatbot !== false, showAiStatus: stored.showAiStatus !== false });
+    } catch {}
+  }, []);
+
+  const saveUiSettings = (next: typeof uiSettings) => {
+    setUiSettings(next);
+    localStorage.setItem("sole_ui_settings", JSON.stringify(next));
+  };
 
   useEffect(() => { getKnowledgeBase().then(setEntries); }, []);
 
@@ -125,6 +139,47 @@ export default function KnowledgePage() {
               </button>
               <span className="text-[10px] text-gray-600">{(sysPrompt.length || 0).toLocaleString("fa-IR")} کاراکتر</span>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* ---------- UI Settings Section ---------- */}
+      <div className="bg-gray-900/20 border border-gray-800/50 rounded-2xl mb-6 overflow-hidden">
+        <button onClick={() => setUiOpen(!uiOpen)}
+          className="w-full flex items-center justify-between p-4 text-right">
+          <div>
+            <span className="text-orange-400 font-semibold text-sm">👁️ نمایش چت‌بات و وضعیت هوش مصنوعی</span>
+            <p className="text-xs text-gray-500 mt-0.5">نمایش دکمه چت‌بات و نشانگر وضعیت اتصال AI را برای کاربران کنترل کنید</p>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 text-gray-400 transition-transform ${uiOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {uiOpen && (
+          <div className="px-4 pb-4 space-y-4">
+            <p className="text-[10px] text-gray-600 leading-relaxed">
+              این تنظیمات در <strong className="text-gray-400">localStorage</strong> ذخیره میشوند و بلافاصله برای کاربران اعمال میگردند.
+            </p>
+            <label className="flex items-center justify-between p-3 bg-gray-900/40 border border-gray-800/50 rounded-xl cursor-pointer">
+              <div>
+                <span className="text-white text-sm font-medium">نمایش دکمه چت‌بات</span>
+                <p className="text-[10px] text-gray-500">دکمه شناور چت‌بات را در سایت نشان بده</p>
+              </div>
+              <div onClick={() => saveUiSettings({ ...uiSettings, showChatbot: !uiSettings.showChatbot })}
+                className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${uiSettings.showChatbot ? "bg-orange-500" : "bg-gray-700"}`}>
+                <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${uiSettings.showChatbot ? "translate-x-5" : ""}`} />
+              </div>
+            </label>
+            <label className="flex items-center justify-between p-3 bg-gray-900/40 border border-gray-800/50 rounded-xl cursor-pointer">
+              <div>
+                <span className="text-white text-sm font-medium">نمایش نشانگر وضعیت AI</span>
+                <p className="text-[10px] text-gray-500">نقطه سبز/قرمز وضعیت اتصال به هوش مصنوعی روی دکمه چت‌بات</p>
+              </div>
+              <div onClick={() => saveUiSettings({ ...uiSettings, showAiStatus: !uiSettings.showAiStatus })}
+                className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${uiSettings.showAiStatus ? "bg-orange-500" : "bg-gray-700"}`}>
+                <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${uiSettings.showAiStatus ? "translate-x-5" : ""}`} />
+              </div>
+            </label>
           </div>
         )}
       </div>
