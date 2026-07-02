@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import SearchDropdown from "@/components/SearchDropdown";
 
 export default function Header() {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
@@ -17,7 +19,7 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 glass">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
+          <Link href="/" onClick={(e) => { if (pathname === "/") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); window.history.replaceState(null, "", "/"); } }} className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <span className="text-lg sm:text-xl font-bold text-gradient">SOLE</span>
             <span className="text-[9px] sm:text-[10px] text-gray-500 font-light tracking-[0.2em] uppercase">STORE</span>
           </Link>

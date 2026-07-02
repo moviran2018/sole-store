@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 const items = [
   { href: "/", label: "خانه",
@@ -19,54 +18,77 @@ const items = [
 export default function MobileNav() {
   const pathname = usePathname();
   const { itemCount } = useCart();
-  const [hasHash, setHasHash] = useState(false);
 
-  useEffect(() => {
-    const hash = window.location.hash;
-    setHasHash(!!hash);
-    if (pathname === "/" && hash === "#products") {
-      setTimeout(() => {
-        document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const handleHome = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      scrollToTop();
+      window.history.replaceState(null, "", "/");
     }
-    if (pathname === "/" && !hash) {
-      window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  const handleProducts = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+      window.location.hash = "products";
     }
-    const onHash = () => setHasHash(!!window.location.hash);
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, [pathname]);
+  };
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" && !hasHash;
-    if (href === "/#products") return pathname === "/" && hasHash;
+    if (href === "/") return pathname === "/" && !(typeof window !== "undefined" && window.location.hash);
+    if (href === "/#products") return pathname === "/" && !!(typeof window !== "undefined" && window.location.hash);
     return pathname === href;
   };
 
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0d0d0d] border-t border-[var(--border)] safe-bottom">
       <div className="flex items-center justify-around h-14">
-        {items.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link key={item.href} href={item.href}
-              className={`flex flex-col items-center justify-center gap-0.5 min-w-0 px-2 py-1 transition-colors ${
-                active ? "text-[var(--accent)]" : "text-gray-600 hover:text-gray-400"
-              }`}>
-              <div className="relative">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                {item.badge && itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-[var(--accent)] text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-lg">
-                    {itemCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[9px] font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
+        <Link href="/" onClick={handleHome}
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-0 px-2 py-1 transition-colors ${
+            isActive("/") ? "text-[var(--accent)]" : "text-gray-600 hover:text-gray-400"
+          }`}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive("/") ? 2 : 1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={items[0].icon} />
+          </svg>
+          <span className="text-[9px] font-medium">خانه</span>
+        </Link>
+        <Link href="/#products" onClick={handleProducts}
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-0 px-2 py-1 transition-colors ${
+            isActive("/#products") ? "text-[var(--accent)]" : "text-gray-600 hover:text-gray-400"
+          }`}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive("/#products") ? 2 : 1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={items[1].icon} />
+          </svg>
+          <span className="text-[9px] font-medium">محصولات</span>
+        </Link>
+        <Link href="/cart"
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-0 px-2 py-1 transition-colors ${
+            isActive("/cart") ? "text-[var(--accent)]" : "text-gray-600 hover:text-gray-400"
+          }`}>
+          <div className="relative">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive("/cart") ? 2 : 1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={items[2].icon} />
+            </svg>
+            {itemCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-[var(--accent)] text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-lg">
+                {itemCount}
+              </span>
+            )}
+          </div>
+          <span className="text-[9px] font-medium">سبد خرید</span>
+        </Link>
+        <Link href="/about"
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-0 px-2 py-1 transition-colors ${
+            isActive("/about") ? "text-[var(--accent)]" : "text-gray-600 hover:text-gray-400"
+          }`}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={isActive("/about") ? 2 : 1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={items[3].icon} />
+          </svg>
+          <span className="text-[9px] font-medium">درباره ما</span>
+        </Link>
       </div>
     </nav>
   );
