@@ -430,17 +430,21 @@ export default function Home() {
               <h2 className="text-xl sm:text-2xl font-bold text-white">محصولات ویژه</h2>
             </div>
           </div>
-          {/* Mobile: horizontal scroll */}
-          <div className="md:hidden overflow-hidden">
-            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+          <div className="overflow-hidden">
+            <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
               <div className="flex gap-3">
                 {featured.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
               </div>
             </div>
-          </div>
-          {/* Desktop: grid */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {featured.slice(0, 8).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+            <div className="hidden md:block overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="flex gap-4 lg:gap-5">
+                {featured.slice(0, 8).map((shoe) => (
+                  <div key={shoe.id} className="min-w-[190px] max-w-[190px] lg:min-w-[220px] lg:max-w-[220px]">
+                    <ShoeCard shoe={shoe} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -453,17 +457,21 @@ export default function Home() {
               <h2 className="text-xl sm:text-2xl font-bold text-white">جدیدترین محصولات</h2>
             </div>
           </div>
-          {/* Mobile: horizontal scroll */}
-          <div className="md:hidden overflow-hidden">
-            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+          <div className="overflow-hidden">
+            <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
               <div className="flex gap-3">
                 {newArrivals.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
               </div>
             </div>
-          </div>
-          {/* Desktop: grid */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {newArrivals.slice(0, 8).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+            <div className="hidden md:block overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="flex gap-4 lg:gap-5">
+                {newArrivals.slice(0, 8).map((shoe) => (
+                  <div key={shoe.id} className="min-w-[190px] max-w-[190px] lg:min-w-[220px] lg:max-w-[220px]">
+                    <ShoeCard shoe={shoe} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -476,17 +484,21 @@ export default function Home() {
               <h2 className="text-xl sm:text-2xl font-bold text-white">تخفیف‌های ویژه</h2>
             </div>
           </div>
-          {/* Mobile: horizontal scroll */}
-          <div className="md:hidden overflow-hidden">
-            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+          <div className="overflow-hidden">
+            <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
               <div className="flex gap-3">
                 {saleItems.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
               </div>
             </div>
-          </div>
-          {/* Desktop: grid */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {saleItems.slice(0, 8).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+            <div className="hidden md:block overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="flex gap-4 lg:gap-5">
+                {saleItems.slice(0, 8).map((shoe) => (
+                  <div key={shoe.id} className="min-w-[190px] max-w-[190px] lg:min-w-[220px] lg:max-w-[220px]">
+                    <ShoeCard shoe={shoe} />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       )}
