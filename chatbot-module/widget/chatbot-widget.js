@@ -88,8 +88,8 @@
     const mic = document.getElementById("cb-mic");
     const msgs = document.getElementById("cb-messages");
 
-    btn.onclick = () => panel.classList.add("open");
-    close.onclick = () => panel.classList.remove("open");
+    btn.onclick = () => { panel.classList.add("open"); if (window.innerWidth <= 480) btn.style.display = "none"; };
+    close.onclick = () => { panel.classList.remove("open"); if (window.innerWidth <= 480) btn.style.display = ""; };
     input.oninput = () => { send.disabled = !input.value.trim(); };
     input.onkeydown = (e) => { if (e.key === "Enter") sendMsg(); };
     send.onclick = sendMsg;
