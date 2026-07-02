@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import ShoeCard from "@/components/ShoeCard";
+import CompactShoeCard from "@/components/CompactShoeCard";
 import HeroSlider from "@/components/HeroSlider";
 import SearchDropdown from "@/components/SearchDropdown";
 import { shoes as staticShoes, categories } from "@/data/shoes";
@@ -393,6 +394,34 @@ export default function Home() {
     <div>
       <HeroSlider products={shoes} />
 
+      {/* Mobile category chips */}
+      <div className="md:hidden">
+        <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+          <div className="flex gap-2 py-3">
+            <button onClick={() => setActiveCategory("all")}
+              className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
+                activeCategory === "all"
+                  ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
+                  : "bg-[var(--muted)] border-[var(--border)]"
+              }`}>
+              <span className="text-xl">📋</span>
+              <span className="text-[8px] whitespace-nowrap text-gray-400">همه</span>
+            </button>
+            {categories.map((cat) => (
+              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
+                  activeCategory === cat.id
+                    ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
+                    : "bg-[var(--muted)] border-[var(--border)]"
+                }`}>
+                <span className="text-xl">{cat.icon}</span>
+                <span className="text-[8px] whitespace-nowrap text-gray-400">{cat.namePersian}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {featured.length > 0 && (
         <section id="featured" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
           <div className="flex items-center justify-between mb-6 sm:mb-10">
@@ -401,8 +430,15 @@ export default function Home() {
               <h2 className="text-xl sm:text-2xl font-bold text-white">محصولات ویژه</h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {featured.slice(0, 4).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+          {/* Mobile: horizontal scroll */}
+          <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
+            <div className="flex gap-3">
+              {featured.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+            </div>
+          </div>
+          {/* Desktop: grid */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {featured.slice(0, 8).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
           </div>
         </section>
       )}
@@ -415,8 +451,15 @@ export default function Home() {
               <h2 className="text-xl sm:text-2xl font-bold text-white">جدیدترین محصولات</h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {newArrivals.slice(0, 4).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+          {/* Mobile: horizontal scroll */}
+          <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
+            <div className="flex gap-3">
+              {newArrivals.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+            </div>
+          </div>
+          {/* Desktop: grid */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {newArrivals.slice(0, 8).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
           </div>
         </section>
       )}
@@ -429,8 +472,15 @@ export default function Home() {
               <h2 className="text-xl sm:text-2xl font-bold text-white">تخفیف‌های ویژه</h2>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {saleItems.slice(0, 4).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+          {/* Mobile: horizontal scroll */}
+          <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
+            <div className="flex gap-3">
+              {saleItems.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+            </div>
+          </div>
+          {/* Desktop: grid */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {saleItems.slice(0, 8).map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
           </div>
         </section>
       )}
