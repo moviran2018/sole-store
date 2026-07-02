@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useCart } from "@/lib/cart-context";
 import { usePathname } from "next/navigation";
 
@@ -18,6 +19,14 @@ const items = [
 export default function MobileNav() {
   const pathname = usePathname();
   const { itemCount } = useCart();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    setHash(window.location.hash);
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -26,6 +35,7 @@ export default function MobileNav() {
       e.preventDefault();
       scrollToTop();
       window.history.replaceState(null, "", "/");
+      setHash("");
     }
   };
 
@@ -38,8 +48,8 @@ export default function MobileNav() {
   };
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" && !(typeof window !== "undefined" && window.location.hash);
-    if (href === "/#products") return pathname === "/" && !!(typeof window !== "undefined" && window.location.hash);
+    if (href === "/") return pathname === "/" && !hash;
+    if (href === "/#products") return pathname === "/" && !!hash;
     return pathname === href;
   };
 
