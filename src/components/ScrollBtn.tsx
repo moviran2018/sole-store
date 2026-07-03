@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 
 interface ScrollBtnProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -9,36 +9,37 @@ interface ScrollBtnProps {
 }
 
 export default function ScrollBtn({ scrollRef, dir, className }: ScrollBtnProps) {
-  const intervalRef = useRef(0);
+  const timerRef = useRef(0);
 
-  const start = useCallback(() => {
-    const ref = scrollRef.current;
-    if (!ref) return;
+  const doScroll = (smooth: boolean) => {
+    const el = scrollRef.current;
+    if (!el) return;
     const isRTL = document.documentElement.dir === "rtl";
-    const pageAmount = ref.clientWidth * 0.75;
-    const pageBase = isRTL ? -pageAmount : pageAmount;
-    ref.scrollBy({ left: dir === "next" ? pageBase : -pageBase, behavior: "smooth" });
-    const step = 18;
-    const stepBase = isRTL ? -step : step;
-    intervalRef.current = window.setInterval(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollBy({ left: dir === "next" ? stepBase : -stepBase });
-      }
-    }, 20);
-  }, [scrollRef, dir]);
+    const amount = smooth ? el.clientWidth * 0.75 : 20;
+    const base = isRTL ? -amount : amount;
+    el.scrollBy({ left: dir === "next" ? base : -base, behavior: smooth ? "smooth" : "auto" });
+  };
 
-  const stop = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = 0;
+  const handleClick = () => doScroll(true);
+
+  const handleMouseDown = () => {
+    doScroll(false);
+    timerRef.current = window.setInterval(() => doScroll(false), 30);
+  };
+
+  const handleStop = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = 0;
     }
-  }, []);
+  };
 
   return (
     <button
-      onMouseDown={start}
-      onMouseUp={stop}
-      onMouseLeave={stop}
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleStop}
+      onMouseLeave={handleStop}
       className={className}
       aria-label={dir === "prev" ? "قبلی" : "بعدی"}
     >
