@@ -10,7 +10,7 @@ export default function CompactShoeCard({ shoe }: { shoe: Shoe }) {
   const { addItem } = useCart();
 
   return (
-    <div className="min-w-[155px] max-w-[155px]">
+    <div className="w-full">
       <Link href={`/products/${shoe.id}`}>
         <div className="aspect-square rounded-xl overflow-hidden bg-[var(--muted)] relative mb-2">
           {shoe.new && (

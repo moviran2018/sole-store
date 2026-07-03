@@ -525,7 +525,7 @@ export default function Home() {
           <div className="overflow-hidden">
             <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
               <div className="flex gap-3">
-                {featured.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+                {featured.slice(0, 8).map((shoe) => <div key={shoe.id} className="min-w-[155px]"><CompactShoeCard shoe={shoe} /></div>)}
               </div>
             </div>
             <div className="relative hidden md:block">
@@ -556,7 +556,7 @@ export default function Home() {
           <div className="overflow-hidden">
             <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
               <div className="flex gap-3">
-                {newArrivals.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+                {newArrivals.slice(0, 8).map((shoe) => <div key={shoe.id} className="min-w-[155px]"><CompactShoeCard shoe={shoe} /></div>)}
               </div>
             </div>
             <div className="relative hidden md:block">
@@ -587,7 +587,7 @@ export default function Home() {
           <div className="overflow-hidden">
             <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
               <div className="flex gap-3">
-                {saleItems.slice(0, 8).map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+                {saleItems.slice(0, 8).map((shoe) => <div key={shoe.id} className="min-w-[155px]"><CompactShoeCard shoe={shoe} /></div>)}
               </div>
             </div>
             <div className="relative hidden md:block">
@@ -673,9 +673,9 @@ export default function Home() {
             {/* Product Scroll */}
             {filtered.length > 0 ? (
               <div className="overflow-hidden">
-                {/* Mobile scroll */}
-                <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
-                  <div className="flex gap-3">
+                {/* Mobile grid */}
+                <div className="md:hidden -mx-4 px-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {filtered.map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
                   </div>
                 </div>
