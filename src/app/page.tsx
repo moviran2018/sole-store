@@ -377,6 +377,7 @@ export default function Home() {
   const newArrivals = shoes.filter((s) => s.new);
   const saleItems = shoes.filter((s) => s.sale);
 
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
   const newScrollRef = useRef<HTMLDivElement>(null);
   const saleScrollRef = useRef<HTMLDivElement>(null);
@@ -411,9 +412,10 @@ export default function Home() {
     <div>
       <HeroSlider products={shoes} />
 
-      {/* Mobile category chips */}
-      <div className="md:hidden overflow-hidden">
-        <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+      {/* Category chips - all devices */}
+      <div className="overflow-hidden">
+        {/* Mobile (edge-to-edge, swipe) */}
+        <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
           <div className="flex gap-2 py-3">
             <button onClick={() => setActiveCategory("all")}
               className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
@@ -435,6 +437,41 @@ export default function Home() {
                 <span className="text-[8px] whitespace-nowrap text-gray-400">{cat.namePersian}</span>
               </button>
             ))}
+          </div>
+        </div>
+        {/* Desktop/Tablet (with arrows) */}
+        <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative">
+            <button onClick={() => scrollByAmount(categoryScrollRef, 'prev')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" aria-label="قبلی">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+            </button>
+            <div ref={categoryScrollRef} className="overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
+              <div className="flex gap-2 py-3">
+                <button onClick={() => setActiveCategory("all")}
+                  className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
+                    activeCategory === "all"
+                      ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
+                      : "bg-[var(--muted)] border-[var(--border)]"
+                  }`}>
+                  <span className="text-xl">📋</span>
+                  <span className="text-[8px] whitespace-nowrap text-gray-400">همه</span>
+                </button>
+                {categories.map((cat) => (
+                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                    className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
+                      activeCategory === cat.id
+                        ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
+                        : "bg-[var(--muted)] border-[var(--border)]"
+                    }`}>
+                    <span className="text-xl">{cat.icon}</span>
+                    <span className="text-[8px] whitespace-nowrap text-gray-400">{cat.namePersian}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button onClick={() => scrollByAmount(categoryScrollRef, 'next')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" aria-label="بعدی">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+            </button>
           </div>
         </div>
       </div>

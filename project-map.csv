@@ -1,0 +1,41 @@
+نوع,کد,بخش,فایل(ها)
+اصلی,M01,صفحه اصلی (Home),src/app/page.tsx
+اصلی,M02,هدر (Header),src/components/Header.tsx
+اصلی,M03,فوتر (Footer),src/components/Footer.tsx
+اصلی,M04,MobileNav (نویگیشن موبایل),src/components/MobileNav.tsx
+اصلی,M05,HeroSlider (اسلایدر),src/components/HeroSlider.tsx
+اصلی,M06,ShoeCard (کارت کامل محصول),src/components/ShoeCard.tsx
+اصلی,M07,CompactShoeCard (کارت جمع‌وجور),src/components/CompactShoeCard.tsx
+اصلی,M08,SearchDropdown (جستجو),src/components/SearchDropdown.tsx
+اصلی,M09,جزئیات محصول,src/components/ProductDetailContent.tsx + products/[id]/page.tsx
+اصلی,M10,سبد خرید (Cart),src/app/cart/page.tsx
+اصلی,M11,CartDrawer (دراور سبد),src/components/CartDrawer.tsx
+اصلی,M12,تسویه حساب (Checkout),src/app/checkout/page.tsx
+اصلی,M13,FilterSidebar (فیلتر سایدبار),داخل src/app/page.tsx
+اصلی,M14,Collection (همه محصولات),بخش products در src/app/page.tsx
+اصلی,M15,ScrollArrows (فلش اسکرول),تابع scrollByAmount در src/app/page.tsx
+اصلی,M16,منو (Menu),src/app/menu/page.tsx + MenuItem/MenuItemCard/FeaturedMenu/Hero
+اصلی,M17,رزرو (Reserve),src/app/reserve/page.tsx
+اصلی,M18,پنل ادمین (Admin),src/app/admin/ + products/orders/messages/knowledge
+اصلی,M19,لاگین ادمین,src/app/admin/login/page.tsx
+اصلی,M20,درباره ما,src/app/about/page.tsx
+اصلی,M21,تماس,src/app/contact/page.tsx
+فرعی,S01,لایه اوت (Layout),src/app/layout.tsx
+فرعی,S02,استایل گلوبال (Global CSS),src/app/globals.css
+فرعی,S03,Cart Context (کانتکست سبد),src/lib/cart-context.tsx
+فرعی,S04,Supabase / دیتابیس,src/lib/supabase.ts + shoe-store.ts
+فرعی,S05,احراز هویت (Auth),src/lib/auth.ts
+فرعی,S06,پرداخت (Payment),src/lib/payment.ts
+فرعی,S07,بازگشت پرداخت,src/app/checkout/callback/page.tsx
+فرعی,S08,AdminGuard (محافظ ادمین),src/components/AdminGuard.tsx
+فرعی,S09,چت‌بات (Chatbot),chatbot-module/
+فرعی,S10,AI Client,src/lib/ai-client.ts
+فرعی,S11,دانش‌نامه (Knowledge),src/lib/knowledge.ts + chatbot-settings.ts
+فرعی,S12,دپلوی (Deploy),.github/workflows/deploy.yml
+فرعی,S13,Sitemap (نقشه سایت),scripts/generate-sitemap.js + public/sitemap.xml
+فرعی,S14,دیتای محصولات,src/data/shoes.ts
+فرعی,S15,دیتای دسته‌بندی,src/data/categories.ts
+فرعی,S16,دیتای منو,src/data/menu.json
+فرعی,S17,Storage (ذخیره محلی),src/lib/storage.ts
+فرعی,S18,Utils (ابزارها),src/lib/utils.ts
+فرعی,S19,صفحه 404,src/app/not-found.tsx
