@@ -552,7 +552,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Results Info */}
+            {/* Results Info + clear filters */}
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs text-gray-500">
                 {searchQuery ? (
@@ -561,12 +561,30 @@ export default function Home() {
                   <>{filtered.length} محصول از {shoes.length}</>
                 )}
               </p>
+              {hasActiveFilters && (
+                <button onClick={clearAll} className="text-[10px] text-[var(--accent)] hover:underline">حذف فیلترها</button>
+              )}
             </div>
 
-            {/* Product Grid */}
+            {/* Product Scroll */}
             {filtered.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-                {filtered.map((shoe) => <ShoeCard key={shoe.id} shoe={shoe} />)}
+              <div className="overflow-hidden">
+                {/* Mobile scroll */}
+                <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
+                  <div className="flex gap-3">
+                    {filtered.map((shoe) => <CompactShoeCard key={shoe.id} shoe={shoe} />)}
+                  </div>
+                </div>
+                {/* Tablet+ scroll */}
+                <div className="hidden md:block overflow-x-auto scrollbar-none">
+                  <div className="flex gap-4 lg:gap-5">
+                    {filtered.map((shoe) => (
+                      <div key={shoe.id} className="min-w-[190px] max-w-[190px] lg:min-w-[220px] lg:max-w-[220px] shrink-0">
+                        <ShoeCard shoe={shoe} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-16 sm:py-20">
