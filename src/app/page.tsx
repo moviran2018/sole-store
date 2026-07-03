@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import ScrollBtn from "@/components/ScrollBtn";
 import ShoeCard from "@/components/ShoeCard";
 import CompactShoeCard from "@/components/CompactShoeCard";
 import HeroSlider from "@/components/HeroSlider";
@@ -383,18 +384,6 @@ export default function Home() {
   const saleScrollRef = useRef<HTMLDivElement>(null);
   const allProductsScrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollByAmount = useCallback((ref: React.RefObject<HTMLDivElement | null>, direction: 'prev' | 'next') => {
-    if (ref.current) {
-      const isRTL = document.documentElement.dir === 'rtl';
-      const amount = ref.current.clientWidth * 0.75;
-      const base = isRTL ? -amount : amount;
-      ref.current.scrollBy({
-        left: direction === 'next' ? base : -base,
-        behavior: 'smooth',
-      });
-    }
-  }, []);
-
   const filterProps = {
     activeCategory, setActiveCategory, catCount,
     selectedBrands, toggleBrand,
@@ -442,9 +431,7 @@ export default function Home() {
         {/* Desktop/Tablet (with arrows) */}
         <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative">
-            <button onClick={() => scrollByAmount(categoryScrollRef, 'prev')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" aria-label="قبلی">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            </button>
+            <ScrollBtn scrollRef={categoryScrollRef} dir="prev" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" />
             <div ref={categoryScrollRef} className="overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
               <div className="flex gap-2 py-3">
                 <button onClick={() => setActiveCategory("all")}
@@ -469,9 +456,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <button onClick={() => scrollByAmount(categoryScrollRef, 'next')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" aria-label="بعدی">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-            </button>
+            <ScrollBtn scrollRef={categoryScrollRef} dir="next" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" />
           </div>
         </div>
       </div>
@@ -491,9 +476,7 @@ export default function Home() {
               </div>
             </div>
             <div className="relative hidden md:block">
-              <button onClick={() => scrollByAmount(featuredScrollRef, 'prev')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" aria-label="قبلی">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-              </button>
+              <ScrollBtn scrollRef={featuredScrollRef} dir="prev" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" />
               <div ref={featuredScrollRef} className="overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
                 <div className="flex gap-4 lg:gap-5">
                   {featured.slice(0, 8).map((shoe) => (
@@ -503,9 +486,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <button onClick={() => scrollByAmount(featuredScrollRef, 'next')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" aria-label="بعدی">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              </button>
+              <ScrollBtn scrollRef={featuredScrollRef} dir="next" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" />
             </div>
           </div>
         </section>
@@ -526,9 +507,7 @@ export default function Home() {
               </div>
             </div>
             <div className="relative hidden md:block">
-              <button onClick={() => scrollByAmount(newScrollRef, 'prev')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" aria-label="قبلی">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-              </button>
+              <ScrollBtn scrollRef={newScrollRef} dir="prev" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" />
               <div ref={newScrollRef} className="overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
                 <div className="flex gap-4 lg:gap-5">
                   {newArrivals.slice(0, 8).map((shoe) => (
@@ -538,9 +517,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <button onClick={() => scrollByAmount(newScrollRef, 'next')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" aria-label="بعدی">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              </button>
+              <ScrollBtn scrollRef={newScrollRef} dir="next" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" />
             </div>
           </div>
         </section>
@@ -561,9 +538,7 @@ export default function Home() {
               </div>
             </div>
             <div className="relative hidden md:block">
-              <button onClick={() => scrollByAmount(saleScrollRef, 'prev')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" aria-label="قبلی">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-              </button>
+              <ScrollBtn scrollRef={saleScrollRef} dir="prev" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" />
               <div ref={saleScrollRef} className="overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
                 <div className="flex gap-4 lg:gap-5">
                   {saleItems.slice(0, 8).map((shoe) => (
@@ -573,9 +548,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <button onClick={() => scrollByAmount(saleScrollRef, 'next')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" aria-label="بعدی">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-              </button>
+              <ScrollBtn scrollRef={saleScrollRef} dir="next" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" />
             </div>
           </div>
         </section>
@@ -655,9 +628,7 @@ export default function Home() {
                 </div>
                 {/* Tablet+ scroll */}
                 <div className="relative hidden md:block">
-                  <button onClick={() => scrollByAmount(allProductsScrollRef, 'prev')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" aria-label="قبلی">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                  </button>
+                  <ScrollBtn scrollRef={allProductsScrollRef} dir="prev" className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-r-lg transition-all" />
                   <div ref={allProductsScrollRef} className="overflow-x-auto scrollbar-none">
                     <div className="flex gap-4 lg:gap-5">
                       {filtered.map((shoe) => (
@@ -667,9 +638,7 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                  <button onClick={() => scrollByAmount(allProductsScrollRef, 'next')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" aria-label="بعدی">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                  </button>
+                  <ScrollBtn scrollRef={allProductsScrollRef} dir="next" className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 flex items-center justify-center bg-black/60 hover:bg-black/80 text-white rounded-l-lg transition-all" />
                 </div>
               </div>
             ) : (
