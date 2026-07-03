@@ -454,33 +454,8 @@ export default function Home() {
     <div>
       <HeroSlider products={shoes} />
 
-      {/* Category chips - all devices */}
+      {/* Category chips - desktop/tablet only (mobile moved to products section) */}
       <div className="overflow-hidden">
-        {/* Mobile (edge-to-edge, swipe) */}
-        <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4">
-          <div className="flex gap-2 py-3">
-            <button onClick={() => setActiveCategory("all")}
-              className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
-                activeCategory === "all"
-                  ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
-                  : "bg-[var(--muted)] border-[var(--border)]"
-              }`}>
-              <span className="text-xl">📋</span>
-              <span className="text-[8px] whitespace-nowrap text-gray-400">همه</span>
-            </button>
-            {categories.map((cat) => (
-              <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
-                  activeCategory === cat.id
-                    ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
-                    : "bg-[var(--muted)] border-[var(--border)]"
-                }`}>
-                <span className="text-xl">{cat.icon}</span>
-                <span className="text-[8px] whitespace-nowrap text-gray-400">{cat.namePersian}</span>
-              </button>
-            ))}
-          </div>
-        </div>
         {/* Desktop/Tablet (with arrows) */}
         <div className="hidden md:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative">
@@ -621,9 +596,34 @@ export default function Home() {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
+            {/* Mobile category chips */}
+            <div className="md:hidden overflow-x-auto scrollbar-none -mx-4 px-4 mb-3">
+              <div className="flex gap-2">
+                <button onClick={() => setActiveCategory("all")}
+                  className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
+                    activeCategory === "all"
+                      ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
+                      : "bg-[var(--muted)] border-[var(--border)]"
+                  }`}>
+                  <span className="text-xl">📋</span>
+                  <span className="text-[8px] whitespace-nowrap text-gray-400">همه</span>
+                </button>
+                {categories.map((cat) => (
+                  <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                    className={`flex flex-col items-center gap-1 min-w-[68px] p-2 rounded-xl border transition-all ${
+                      activeCategory === cat.id
+                        ? "bg-[var(--accent)]/20 border-[var(--accent)]/40"
+                        : "bg-[var(--muted)] border-[var(--border)]"
+                    }`}>
+                    <span className="text-xl">{cat.icon}</span>
+                    <span className="text-[8px] whitespace-nowrap text-gray-400">{cat.namePersian}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             {/* Search + Sort + Filter Button Bar */}
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 pb-4 border-b border-[var(--border)]">
-              <div className="relative flex-1">
+              <div className="relative flex-1 hidden md:block">
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
