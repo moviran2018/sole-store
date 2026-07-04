@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moviran2018.github.io/sole-store/sitemap.xml

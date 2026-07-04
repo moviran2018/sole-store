@@ -1,0 +1,6 @@
+1:"$Sreact.fragment"
+2:I[97421,["/sole-store/_next/static/chunks/3nq9hdi_7z_tw.js","/sole-store/_next/static/chunks/1ntd9n5nnm0zt.js","/sole-store/_next/static/chunks/14mrh2-p_w84d.js","/sole-store/_next/static/chunks/0ecod8r_2z4nr.js"],"default"]
+3:I[97367,["/sole-store/_next/static/chunks/3nq9hdi_7z_tw.js","/sole-store/_next/static/chunks/1ntd9n5nnm0zt.js","/sole-store/_next/static/chunks/14mrh2-p_w84d.js"],"OutletBoundary"]
+4:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"shoeId":"cust-mr0bvila"}],[["$","script","script-0",{"src":"/sole-store/_next/static/chunks/0ecod8r_2z4nr.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"Mf6tSIRfhnSimEhisKqZW"}
+5:null

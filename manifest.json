@@ -1,0 +1,29 @@
+{
+  "name": "Sole Store",
+  "short_name": "Sole Store",
+  "description": "فروشگاه تخصصی کفش با بهترین برندهای دنیا",
+  "start_url": "/sole-store/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff6b00",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "fa",
+  "categories": ["shopping", "fashion"],
+  "icons": [
+    {
+      "src": "/sole-store/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/sole-store/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
